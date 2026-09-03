@@ -1,0 +1,5 @@
+# Treasury Atom
+
+Treasury Atom is an authenticated treasury close and reconciliation workspace.
+All current financial values are illustrative until reviewed source evidence is connected.
+Do not treat this development workspace as a source of real balances or payment authority.

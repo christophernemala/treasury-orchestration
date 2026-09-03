@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build and test output
+dist/
+client/dist/
+server/dist/
+coverage/
+*.tsbuildinfo
+
+# Runtime state
+.runtime/
+server/data/
+*.log
+*.pid
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python tooling (future adapters/scripts)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Hosting and local tooling
+.vercel/
+.supabase/
+.turbo/
+.vite/

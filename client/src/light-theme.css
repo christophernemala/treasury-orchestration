@@ -1,0 +1,160 @@
+:root {
+  --bg: #eef0f3;
+  --panel: #ffffff;
+  --panel2: #f7f9fc;
+  --line: #e4e8ef;
+  --muted: #6d7685;
+  --blue: #1769ff;
+  --blue2: #0f55d9;
+  --good: #1769ff;
+  --warn: #b96c00;
+  --danger: #d13c4d;
+  --violet: #6747d9;
+}
+
+body {
+  color: #111827;
+  background: #eef0f3;
+}
+
+.obsidian-shell {
+  color: #111827;
+  background:
+    radial-gradient(circle at 86% 4%, rgba(255, 255, 255, .95), transparent 25%),
+    linear-gradient(135deg, #f2f3f5 0%, #e9ebef 100%);
+}
+
+.spatial-canvas { opacity: .055; filter: saturate(.75); }
+.spatial-fallback { background: radial-gradient(circle at 72% 30%, rgba(23, 105, 255, .06), transparent 30%); }
+
+.obsidian-shell aside {
+  border-right-color: #e3e7ed;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 8px 0 32px rgba(32, 45, 64, .035);
+}
+
+.obsidian-shell nav button,
+.obsidian-shell .logout { color: #667085; }
+.obsidian-shell nav button:hover { background: #f1f5fb; color: #172033; }
+.obsidian-shell nav button.active {
+  color: #0f5ddd;
+  background: #eaf2ff;
+  box-shadow: inset 3px 0 #1769ff;
+}
+.obsidian-shell nav button.active svg { color: #1769ff; }
+.obsidian-shell nav button kbd { color: #a0a8b5; }
+
+.obsidian-shell .aside-control {
+  color: #1769ff;
+  border-color: #d6e4ff;
+  background: #f3f7ff;
+}
+.obsidian-shell .aside-control b { color: #1f3b67; }
+.obsidian-shell .aside-control span { color: #71819b; }
+
+.obsidian-shell .topbar {
+  border-bottom-color: rgba(218, 223, 231, .9);
+  background: rgba(255, 255, 255, .88);
+  box-shadow: 0 4px 24px rgba(32, 45, 64, .035);
+}
+.topbar h1 { color: #111827; }
+.topbar > div > span { color: #7b8492; }
+.stream-status i,
+.stream-status.connected i,
+.stream-status.connecting i,
+.stream-status.reconnecting i { background: #1769ff !important; box-shadow: 0 0 0 4px rgba(23, 105, 255, .1) !important; }
+.stream-status.offline i { background: #d13c4d !important; }
+.avatar { color: #fff; background: linear-gradient(145deg, #2877ff, #1057db); box-shadow: 0 7px 18px rgba(23, 105, 255, .22); }
+.sample-pill { color: #657083; border-color: #dce1e9; background: rgba(255,255,255,.75); }
+
+.obsidian-shell .card {
+  color: #111827;
+  border: 1px solid #e3e7ed;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 12px 32px rgba(29, 40, 57, .065);
+}
+
+.hero {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.98) 0 52%, rgba(255,255,255,.7)),
+    radial-gradient(circle at 83% 48%, rgba(23,105,255,.14), transparent 27%),
+    linear-gradient(135deg, #fff, #f1f6ff);
+}
+.hero h2, .panel h3, .review-pane > h2, .module-hero h2 { color: #0d1320; }
+.hero p, .module-hero p { color: #6d7685; }
+.ring { background: conic-gradient(#1769ff var(--pct), #e9edf3 0); box-shadow: 0 9px 25px rgba(23,105,255,.12); }
+.ring::after { background: #fff; }
+.ring span { color: #788394; }
+
+.metric-icon { color: #1769ff; background: #eaf2ff; }
+.metric-icon.violet { color: #6747d9; background: #f0edff; }
+.metric-icon.amber { color: #b96c00; background: #fff4dc; }
+.metric-icon.green { color: #1769ff; background: #eaf2ff; }
+.metric > span, .metric small { color: #7a8493; }
+.metric strong { color: #111827; }
+.section-kicker, .eyebrow { color: #748096; }
+
+.account-row, .task-row, th, td, .audit-line { border-color: #e9edf2; }
+.account-row span, .task-row span, td span, .audit-item span, .audit-item small { color: #596577; }
+.bank-mark { color: #0d4fc4; background: #e5efff; }
+.audit-item { border-color: #e6eaf0; background: #f8fafc; }
+.audit-item svg, .audit-line svg { color: #1769ff; }
+
+.primary {
+  color: #fff;
+  background: linear-gradient(180deg, #2478ff, #125bdc);
+  box-shadow: 0 8px 20px rgba(23, 105, 255, .22);
+}
+.secondary { color: #344054; background: #fff; border-color: #dce1e8; box-shadow: 0 2px 8px rgba(20,33,51,.04); }
+.icon-button, .text-button, .menu, .close-mobile { color: #1769ff; }
+
+.filters .search, .filters select {
+  color: #344054;
+  background: #f8fafc;
+  border-color: #dfe4eb;
+}
+.search input { color: #111827; }
+th { color: #7c8696; background: #f8fafc; }
+td { color: #263142; }
+.negative { color: #d13c4d; }
+
+.badge { color: #687386; border-color: #dce2ea; background: #f6f8fb; }
+.badge.good, .badge.blue { color: #145cd5; border-color: #cfe0ff; background: #edf4ff; }
+.badge.warn { color: #9d620d; border-color: #f1d79f; background: #fff8e9; }
+.badge.danger { color: #c43b4b; border-color: #f2cbd0; background: #fff1f3; }
+.badge.violet { color: #6542cf; border-color: #dbd0ff; background: #f4f0ff; }
+
+.recon-item { color: #263142; border-color: #e7ebf1; }
+.recon-item.active { background: #edf4ff; }
+.recon-item span, .review-pane > p { color: #788394; }
+.amount-block { background: #f8fafc; border-color: #e1e6ed; }
+.amount-block span { color: #7a8493; }
+.suggestion { color: #1d3c6b; border-color: #cbdcff; background: #eff5ff; }
+.suggestion > span, .suggestion > small { color: #657b9e; }
+.gate-note { color: #1769ff; border-color: #d3e2ff; background: #f2f7ff; }
+.gate-note b { color: #1e3c68; }
+.gate-note span { color: #71809a; }
+.empty { color: #778292; border-color: #d8dee7; background: #fafbfc; }
+
+.module-hero {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.98), rgba(255,255,255,.72)),
+    radial-gradient(circle at 84% 25%, rgba(23,105,255,.13), transparent 34%);
+}
+.module-health { color: #1769ff; border-color: #d4e2ff; background: #f1f6ff; }
+.module-health b { color: #193b70; }
+.module-health span { color: #7182a0; }
+.module-panel td > span { color: #334155; }
+.module-status { color: #145cd5 !important; border-color: #cfe0ff; background: #edf4ff; }
+.module-foot { color: #7b8492; }
+.system-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 17px 34px; border-top: 1px solid #dde2e9; color: #7b8492; background: rgba(255,255,255,.72); font-size: 8px; }
+.system-footer b { color: #1769ff; }
+.skip-link { position: fixed; z-index: 100; top: 8px; left: 8px; padding: 10px 14px; border-radius: 8px; background: #0b1f3a; color: #fff; transform: translateY(-160%); transition: transform .18s ease; }
+.skip-link:focus { transform: translateY(0); }
+.integration-warning { color: #97600c; border-color: #efd69f; background: #fff8e8; }
+.integration-warning span { color: #907347; }
+
+@media (max-width: 720px) {
+  .obsidian-shell aside { box-shadow: 18px 0 50px rgba(30, 43, 62, .14); }
+  .system-footer { align-items: flex-start; flex-direction: column; padding: 16px 14px; }
+}

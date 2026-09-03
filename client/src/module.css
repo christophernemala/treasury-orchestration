@@ -1,0 +1,47 @@
+.obsidian-shell nav {
+  gap: 3px;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 3px;
+}
+
+.obsidian-shell nav button,
+.obsidian-shell .logout {
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.module-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 27px 29px;
+  margin-bottom: 15px;
+  background: radial-gradient(circle at 82% 20%, rgba(57, 112, 216, .2), transparent 31%), linear-gradient(145deg, rgba(18, 25, 35, .94), rgba(11, 15, 21, .94));
+}
+
+.module-hero h2 { font-size: 30px; letter-spacing: -.04em; margin: 7px 0 4px; }
+.module-hero p { max-width: 650px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.module-health { display: flex; align-items: center; gap: 10px; min-width: 205px; padding: 13px 15px; border: 1px solid #2a4772; background: #111e31; border-radius: 11px; color: #6fa0ff; }
+.module-health div { display: grid; gap: 3px; }
+.module-health b { font-size: 10px; color: #dce7f7; }
+.module-health span { font-size: 9px; color: #8493a8; }
+.integration-warning { display: flex; gap: 11px; align-items: flex-start; margin-bottom: 15px; padding: 13px 16px; border: 1px solid #614924; background: #2e2518; border-radius: 11px; color: #ffc26e; }
+.integration-warning div { display: grid; gap: 3px; }
+.integration-warning b { font-size: 11px; }
+.integration-warning span { font-size: 10px; color: #c8a978; }
+.module-panel { min-height: 440px; }
+.module-panel td { white-space: nowrap; }
+.module-panel td:nth-child(2) { white-space: normal; min-width: 150px; }
+.module-panel td > span { margin: 0; color: #c3cbd8; }
+.module-status { display: inline-flex !important; width: max-content; padding: 4px 7px; border-radius: 99px; border: 1px solid #31528b; color: #8eb1ff !important; background: #172744; text-transform: capitalize; }
+.module-foot { display: flex; align-items: center; gap: 7px; margin-top: 17px; color: #69778b; font-size: 9px; }
+.loading.compact { height: 260px; }
+.empty > div { display: grid; gap: 3px; }
+.empty > div b { font-size: 11px; }
+.empty > div span { font-size: 9px; color: #7f8b9d; }
+
+@media (max-width: 720px) {
+  .module-hero { align-items: flex-start; gap: 18px; }
+  .module-health { display: none; }
+}

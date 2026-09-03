@@ -1,0 +1,9 @@
+create index if not exists treasury_approvals_requested_by_idx on public.treasury_approvals (requested_by);
+create index if not exists treasury_approvals_reviewed_by_idx on public.treasury_approvals (reviewed_by);
+create index if not exists treasury_audit_actor_idx on public.treasury_audit_receipts (actor_id);
+create index if not exists treasury_statements_uploaded_by_idx on public.treasury_bank_statements (uploaded_by);
+create index if not exists treasury_tasks_org_idx on public.treasury_close_tasks (organization_id);
+create index if not exists treasury_tasks_owner_idx on public.treasury_close_tasks (owner_id);
+create index if not exists treasury_evidence_account_idx on public.treasury_evidence (bank_account_id);
+create index if not exists treasury_evidence_uploaded_by_idx on public.treasury_evidence (uploaded_by);
+create index if not exists treasury_reconciliations_reviewed_by_idx on public.treasury_reconciliations (reviewed_by);
