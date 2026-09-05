@@ -14,7 +14,7 @@ describe("platform v1 controls", () => {
   beforeEach(() => platformRepository.reset());
 
   it("returns scoped modules and a correlation identifier", async () => {
-    const session = await authenticate("analyst@treasury.demo");
+    const session = await authenticate("analyst@treasury.local");
     const response = await request(session.app).get("/api/v1/modules").set("Authorization", `Bearer ${session.token}`);
     expect(response.status).toBe(200);
     expect(response.headers["x-correlation-id"]).toBeTruthy();
@@ -24,7 +24,7 @@ describe("platform v1 controls", () => {
   });
 
   it("enforces permission and structured error contracts", async () => {
-    const session = await authenticate("analyst@treasury.demo");
+    const session = await authenticate("analyst@treasury.local");
     const response = await request(session.app).post("/api/v1/customers").set("Authorization", `Bearer ${session.token}`).set("Idempotency-Key", "customer-1").send({});
     expect(response.status).toBe(403);
     expect(response.body.error.code).toBe("PERMISSION_DENIED");
@@ -32,7 +32,7 @@ describe("platform v1 controls", () => {
   });
 
   it("requires and replays idempotent writes", async () => {
-    const session = await authenticate("admin@treasury.demo");
+    const session = await authenticate("admin@treasury.local");
     const body = { legalEntityId: "le-northstar-ae", code: "CUS-990", legalName: "Illustrative Trading LLC", taxId: "100099990000001", terms: "Net 30", owner: "Amina Rahman" };
     const missing = await request(session.app).post("/api/v1/customers").set("Authorization", `Bearer ${session.token}`).send(body);
     expect(missing.status).toBe(400);
@@ -43,7 +43,7 @@ describe("platform v1 controls", () => {
   });
 
   it("creates an approval without executing an escrow release", async () => {
-    const session = await authenticate("admin@treasury.demo");
+    const session = await authenticate("admin@treasury.local");
     const response = await request(session.app).post("/api/v1/escrow/releases").set("Authorization", `Bearer ${session.token}`).set("Idempotency-Key", "release-1").send({ accountId: "esc-kriba-aed", amount: "5000.00" });
     expect(response.status).toBe(202);
     expect(response.body.externalAction).toBe("not_executed");

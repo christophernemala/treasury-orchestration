@@ -2,6 +2,8 @@
 
 Treasury Atom is a governed treasury month-end workspace for cash visibility, bank-statement ingestion, transaction review, reconciliation, evidence, approvals and auditable agent workflows. It includes an authenticated real-time SSE dashboard and interactive motion controls while clearly identifying seeded development data as illustrative.
 
+The application contains working local transaction CRUD, reconciliation decisions, unapplied-cash workflows, CSV export, authenticated SSE updates and audit records. External treasury integrations are not represented as live. See the [treasury operations coverage matrix](docs/treasury-operations-coverage.md) for the exact boundary and production completion sequence.
+
 ## Technology
 
 - React 19, TypeScript, Vite and React Router
@@ -25,6 +27,8 @@ scripts/      Local developer utilities
 automation/   Reserved for reviewed n8n workflows and agent configurations
 ```
 
+The original 4K treasury-vault login artwork is stored at `client/public/assets/treasury-vault-4k.webp`; it contains no third-party branding.
+
 ## Run locally
 
 Prerequisites: Node.js 22 or later and npm.
@@ -39,7 +43,7 @@ npm run dev
 
 Open `http://127.0.0.1:5173/app`. Vite proxies `/api` to the Express server at `http://127.0.0.1:4320`, so `VITE_API_BASE_URL` is unnecessary locally.
 
-Development access uses `admin@treasury.demo` / `Treasury123!` with OTP `246810`. It is intentionally local mock authentication and must be replaced before production use.
+Local development access uses `admin@treasury.local` / `Treasury123!` with OTP `246810`. It is intentionally local authentication and must be replaced by production identity before deployment.
 
 ## Health, reset and quality gates
 

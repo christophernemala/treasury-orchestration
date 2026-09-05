@@ -117,7 +117,7 @@ export function createApp() {
         email: user.email,
         role: user.role,
         message:
-          "Development account created. Continue through the mock OTP login.",
+          "Development account created. Continue through the local OTP login.",
       });
   });
   app.post("/api/auth/verify-otp", (req, res) => {
@@ -347,7 +347,7 @@ export function createApp() {
       .set({
         "Content-Type": "text/csv",
         "Content-Disposition":
-          'attachment; filename="mock-treasury-transactions.csv"',
+          'attachment; filename="treasury-transactions.csv"',
       })
       .send(rows.map((r) => r.map(quote).join(",")).join("\n"));
   });

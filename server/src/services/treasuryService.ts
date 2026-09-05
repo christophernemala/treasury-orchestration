@@ -19,6 +19,6 @@ export function buildTreasurySnapshot() {
     balances,
     reconciliation: reconciliationSummary(store.state.transactions),
     generatedAt: new Date().toISOString(),
-    dataMode: "mock-development",
+    dataMode: "seeded-development",
   };
 }

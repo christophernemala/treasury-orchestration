@@ -170,3 +170,9 @@ td { color: #263142; }
   .obsidian-shell aside { box-shadow: 18px 0 50px rgba(30, 43, 62, .14); }
   .system-footer { align-items: flex-start; flex-direction: column; padding: 16px 14px; }
 }
+.login-shell .robo-panel { background: #edf3f8; }
+.login-shell .orb { width: min(88%, 920px); height: min(78vh, 760px); border-radius: 26px; border-color: rgba(47,72,105,.18); box-shadow: 0 28px 80px rgba(22,48,82,.16), 0 0 0 12px rgba(255,255,255,.5); }
+.login-shell .orb img { filter: saturate(.9) contrast(1.02) brightness(1.03); }
+.login-shell .robo-grid { opacity: .08; }
+.login-shell .robo-caption { color: #1c334e; border-color: rgba(83,107,137,.22); background: rgba(255,255,255,.82); box-shadow: 0 12px 30px rgba(27,53,86,.12); }
+.login-shell .robo-caption small { color: #64748b; }

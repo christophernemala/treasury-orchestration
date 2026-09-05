@@ -4,7 +4,7 @@ const now=()=>new Date().toISOString();
 export function createSeedState():StoreState {
   const passwordHash=bcrypt.hashSync('Treasury123!',10);
   return {
-    users:[{id:'usr-admin',email:'admin@treasury.demo',name:'Amina Rahman',role:'admin',passwordHash,onboarded:true},{id:'usr-treasury',email:'analyst@treasury.demo',name:'Omar Nasser',role:'treasury',passwordHash,onboarded:true}],
+    users:[{id:'usr-admin',email:'admin@treasury.local',name:'Amina Rahman',role:'admin',passwordHash,onboarded:true},{id:'usr-treasury',email:'analyst@treasury.local',name:'Omar Nasser',role:'treasury',passwordHash,onboarded:true}],
     statements:[
       {id:'stm-001',bank:'Emirates NBD',account:'Operating • 4921',period:'Aug 2026',currency:'AED',openingBalance:10850000,closingBalance:12642750,status:'review',transactionCount:4},
       {id:'stm-002',bank:'HSBC UAE',account:'Collections • 1840',period:'Aug 2026',currency:'USD',openingBalance:1850000,closingBalance:2015500,status:'received',transactionCount:3}
@@ -25,9 +25,9 @@ export function createSeedState():StoreState {
       {id:'jr-004',date:'2026-08-31',account:'780100',description:'Interest income',amount:112000,currency:'USD',reference:'INT-AUG'}
     ],
     unapplied:[{id:'ua-001',transactionId:'tx-003',payer:'Unknown',amount:185000,currency:'AED',receivedDate:'2026-08-30',ageDays:1,reason:'Missing remittance advice',status:'investigating',owner:'Omar Nasser'}],
-    audit:[{id:'aud-001',at:now(),actor:'system',action:'seed',entity:'workspace',detail:'Mock development dataset loaded'}],
+    audit:[{id:'aud-001',at:now(),actor:'system',action:'seed',entity:'workspace',detail:'Local development dataset loaded'}],
     agentTasks:[
-      {id:'agt-001',name:'Statement watcher',status:'complete',lastRun:'2 min ago',nextRun:'in 13 min',detail:'2 mock statements indexed',progress:100},
+      {id:'agt-001',name:'Statement watcher',status:'complete',lastRun:'2 min ago',nextRun:'in 13 min',detail:'2 development statements indexed',progress:100},
       {id:'agt-002',name:'Match suggestion agent',status:'attention',lastRun:'5 min ago',nextRun:'on demand',detail:'2 high-confidence suggestions ready',progress:72},
       {id:'agt-003',name:'Unapplied cash monitor',status:'running',lastRun:'now',nextRun:'continuous',detail:'1 item awaiting remittance',progress:46}
     ]

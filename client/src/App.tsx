@@ -56,7 +56,7 @@ const statusTone: Record<string, string> = {
 
 function Login({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState<"login" | "otp">("login"),
-    [email, setEmail] = useState("admin@treasury.demo"),
+    [email, setEmail] = useState("admin@treasury.local"),
     [password, setPassword] = useState("Treasury123!"),
     [otp, setOtp] = useState("246810"),
     [challenge, setChallenge] = useState(""),
@@ -147,8 +147,7 @@ function Login({ onDone }: { onDone: () => void }) {
         <div className="demo-note">
           <ShieldCheck size={17} />
           <span>
-            <b>Mock access only.</b> Demo credentials are prefilled. OTP:
-            246810.
+            <b>Local development access.</b> Credentials are prefilled. OTP: 246810.
           </span>
         </div>
       </div>
@@ -160,8 +159,8 @@ function Login({ onDone }: { onDone: () => void }) {
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         >
           <img
-            src="/assets/treasury-humanoid.png"
-            alt="Cybernetic treasury assistant visual"
+            src="/assets/treasury-vault-4k.webp"
+            alt="Contemporary institutional treasury vault and operations environment"
           />
         </motion.div>
         <div className="robo-caption">
@@ -204,7 +203,7 @@ function Dashboard({
           <div className="eyebrow">TREASURY CONTROL ROOM</div>
           <h2>Good morning, Amina.</h2>
           <p>
-            Three items need a human decision before today’s illustrative close
+            Three items need a human decision before today’s development close
             can progress.
           </p>
           <button className="primary" onClick={() => setPage("Reconciliation")}>
@@ -221,7 +220,7 @@ function Dashboard({
             <b>{data.reconciliation.matchRate}%</b>
             <span>matched</span>
           </div>
-          <small>{data.reconciliation.total} illustrative transactions · Aug 2026</small>
+          <small>{data.reconciliation.total} seeded transactions · Aug 2026</small>
         </div>
       </div>
       <MotionWorkspace
@@ -247,7 +246,7 @@ function Dashboard({
         <Metric
           label="Unapplied cash"
           value={money(data.unapplied.total)}
-          detail={`${data.unapplied.count} open illustrative item`}
+          detail={`${data.unapplied.count} open seeded item`}
           icon={CircleDollarSign}
           tone="amber"
         />
@@ -361,8 +360,8 @@ function Transactions({
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!editing) return;
-    await api(`/transactions/${editing.id}`, {
-      method: "PATCH",
+    await api(editing.id ? `/transactions/${editing.id}` : "/transactions", {
+      method: editing.id ? "PATCH" : "POST",
       body: JSON.stringify(editing),
     });
     setEditing(null);
@@ -381,11 +380,10 @@ function Transactions({
           </button>
           <button
             className="primary"
-            onClick={() =>
-              alert(
-                "Add flow is available through the documented API in this MVP.",
-              )
-            }
+            onClick={() => {
+              const today = new Date().toISOString().slice(0, 10);
+              setEditing({ id: "", date: today, valueDate: today, description: "", amount: 0, currency: "AED", account: "Operating • 4921", reference: "", status: "unmatched", counterparty: "", category: "Uncategorized" });
+            }}
           >
             <Plus size={15} /> Add entry
           </button>
@@ -472,7 +470,7 @@ function Transactions({
               exit={{ y: 25, opacity: 0 }}
             >
               <header>
-                <h3>Review transaction</h3>
+                <h3>{editing.id ? "Review transaction" : "Record transaction"}</h3>
                 <button
                   type="button"
                   className="icon-button"
@@ -490,6 +488,38 @@ function Transactions({
                   }
                 />
               </label>
+              <div className="form-grid">
+                <label>
+                  Transaction date
+                  <input type="date" required value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} />
+                </label>
+                <label>
+                  Value date
+                  <input type="date" required value={editing.valueDate} onChange={(e) => setEditing({ ...editing, valueDate: e.target.value })} />
+                </label>
+                <label>
+                  Amount
+                  <input type="number" step="0.01" required value={editing.amount} onChange={(e) => setEditing({ ...editing, amount: Number(e.target.value) })} />
+                </label>
+                <label>
+                  Currency
+                  <input maxLength={3} required value={editing.currency} onChange={(e) => setEditing({ ...editing, currency: e.target.value.toUpperCase() })} />
+                </label>
+              </div>
+              <label>
+                Account
+                <input required value={editing.account} onChange={(e) => setEditing({ ...editing, account: e.target.value })} />
+              </label>
+              <div className="form-grid">
+                <label>
+                  Reference
+                  <input value={editing.reference} onChange={(e) => setEditing({ ...editing, reference: e.target.value })} />
+                </label>
+                <label>
+                  Counterparty
+                  <input value={editing.counterparty} onChange={(e) => setEditing({ ...editing, counterparty: e.target.value })} />
+                </label>
+              </div>
               <label>
                 Status
                 <select
@@ -517,7 +547,7 @@ function Transactions({
                   }
                 />
               </label>
-              <button className="primary">Save reviewed change</button>
+              <button className="primary">{editing.id ? "Save reviewed change" : "Record transaction"}</button>
             </motion.form>
           </motion.div>
         )}
@@ -686,7 +716,7 @@ function SimplePage({
           <span className="section-kicker">{kicker}</span>
           <h3>{title}</h3>
         </div>
-        <span className="sample-pill">Mock workspace</span>
+        <span className="sample-pill">Local development data</span>
       </header>
       {children}
     </section>
