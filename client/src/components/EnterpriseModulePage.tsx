@@ -38,9 +38,16 @@ export function EnterpriseModulePage({ page }: { page: keyof typeof configs }) {
   }, [filter, records]);
 
   useEffect(() => {
+    setFilter("");
+    setShowConnections(page === "Customers");
+  }, [page]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       const isTyping = target?.matches("input, textarea, select, [contenteditable='true']");
+      const hasModifier = event.ctrlKey || event.metaKey || event.altKey;
+      if (hasModifier) return;
       if (event.key.toLowerCase() === "k" && !isTyping) {
         event.preventDefault();
         searchRef.current?.focus();
@@ -49,7 +56,7 @@ export function EnterpriseModulePage({ page }: { page: keyof typeof configs }) {
         event.preventDefault();
         void query.refetch();
       }
-      if (event.key.toLowerCase() === "d" && !isTyping) {
+      if (event.key.toLowerCase() === "d" && !isTyping && page === "Customers") {
         event.preventDefault();
         setShowConnections((visible) => !visible);
       }
@@ -74,7 +81,7 @@ export function EnterpriseModulePage({ page }: { page: keyof typeof configs }) {
       </section>
       <div className="module-commandbar" aria-label="Workspace keyboard actions">
         <label className="module-search" htmlFor="module-record-search"><Search size={16}/><input ref={searchRef} id="module-record-search" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder={`Search ${page.toLowerCase()}…`} />{filter && <button onClick={() => setFilter("")} aria-label="Clear search"><X size={15}/></button>}<kbd>K</kbd></label>
-        <button className="command-button" onClick={() => setShowConnections((visible) => !visible)} aria-expanded={showConnections}><Network size={16}/><span>{showConnections ? "Hide" : "Show"} data map</span><kbd>D</kbd></button>
+        {page === "Customers" && <button className="command-button" onClick={() => setShowConnections((visible) => !visible)} aria-expanded={showConnections}><Network size={16}/><span>{showConnections ? "Hide" : "Show"} data map</span><kbd>D</kbd></button>}
         <button className="command-button" onClick={() => query.refetch()} disabled={query.isFetching}><RefreshCw className={query.isFetching ? "spin" : ""} size={16}/><span>{query.isFetching ? "Refreshing" : "Refresh"}</span><kbd>R</kbd></button>
       </div>
       {showConnections && page === "Customers" && <DataConnectionMap recordCount={records.length} />}
