@@ -1,0 +1,14 @@
+version: 1
+application: treasury-atom
+endpoint: /api/health/runtime
+aggregate_status: propose_only
+can_mutate: false
+layers:
+  process: healthy
+  scheduler: not_configured
+  execution: in_memory_development
+  governance: propose_only
+rules:
+  - missing production verifier disables mutation authority
+  - process health alone never implies safe mutation
+  - stale or unknown governance state fails closed

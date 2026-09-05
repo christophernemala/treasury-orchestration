@@ -50,6 +50,7 @@ npm run check
 ```
 
 - `GET /api/health` checks backend readiness.
+- `GET /api/health/runtime` reports process, scheduler, execution and governance readiness; development remains deliberately `propose_only`. See [docs/governance.md](docs/governance.md).
 - `POST /api/v1/dev/reset` restores the platform repository to its illustrative seed state; an admin token is required.
 - `POST /api/seed` restores legacy treasury transaction/reconciliation seeds; an admin token is required.
 - `npm run check` builds both workspaces and runs all server tests.
@@ -89,10 +90,11 @@ For a single Vercel/Supabase architecture, migrate authenticated events to priva
 ## Current status
 
 - Functional local authentication, REST workflows and authenticated SSE updates
+- Evidence-bound Intelligence workspace with deterministic investigation prompts and propose-only controls
 - Operational real-time motion controls persisted per browser
 - Responsive UI with reduced-motion and keyboard support
 - Empty Supabase treasury schema applied with RLS; security advisor clean
-- Production build and 10 automated server tests passing
+- Production build and 11 automated server tests passing
 
 ### Known issues
 
@@ -115,4 +117,3 @@ For a single Vercel/Supabase architecture, migrate authenticated events to priva
 - [API contract](docs/api.md)
 - [Deployment and hardening](docs/deployment.md)
 - [UI and product audit](docs/ui-audit.md)
-

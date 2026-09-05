@@ -25,9 +25,11 @@ import { NAV_ITEMS, ObsidianDashboard } from "./components/ObsidianDashboard";
 import type { PageName } from "./components/ObsidianDashboard";
 import { EnterpriseModulePage } from "./components/EnterpriseModulePage";
 import { MotionWorkspace } from "./components/motion/MotionWorkspace";
+import { TreasuryIntelligencePortal } from "./components/TreasuryIntelligencePortal";
 
 const PAGE_ROUTES: Record<PageName, string> = {
   Dashboard: "/app",
+  Intelligence: "/app/intelligence",
   Customers: "/app/crm",
   Invoices: "/app/invoices",
   Banking: "/app/banking",
@@ -748,7 +750,9 @@ export function App() {
       return <Transactions items={tx} reload={reload} />;
     if (page === "Reconciliation")
       return <Reconciliation items={tx} reload={reload} />;
-    return <EnterpriseModulePage page={page as Exclude<PageName, "Dashboard" | "Reconciliation" | "Ledger">} />;
+    if (page === "Intelligence")
+      return <TreasuryIntelligencePortal dashboard={liveData} transactions={tx} connectionStatus={status} lastEventAt={lastEventAt} onNavigate={setPage} />;
+    return <EnterpriseModulePage page={page as Exclude<PageName, "Dashboard" | "Intelligence" | "Reconciliation" | "Ledger">} />;
   }, [liveData, page, tx, status, lastEventAt]);
   if (!authed) return <Login onDone={() => { setAuthed(true); navigate("/app"); }} />;
   return (

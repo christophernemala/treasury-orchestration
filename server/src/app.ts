@@ -53,6 +53,20 @@ export function createApp() {
       time: new Date().toISOString(),
     }),
   );
+  app.get("/api/health/runtime", (_req, res) => {
+    const checkedAt = new Date().toISOString();
+    res.status(200).json({
+      status: "propose_only",
+      canMutate: false,
+      checkedAt,
+      layers: {
+        process: { status: "healthy", checkedAt },
+        scheduler: { status: "not_configured", checkedAt },
+        execution: { status: "healthy", checkedAt, mode: "in_memory_development" },
+        governance: { status: "propose_only", checkedAt, reason: "No production verifier or durable approval token store is configured" },
+      },
+    });
+  });
   app.post("/api/auth/login", async (req, res) => {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success)

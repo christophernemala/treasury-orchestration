@@ -12,6 +12,7 @@ import {
   ReceiptText,
   ScanSearch,
   ScrollText,
+  Sparkles,
   Send,
   ShieldCheck,
   Users,
@@ -22,6 +23,7 @@ import type { ConnectionStatus } from "../types";
 
 export type PageName =
   | "Dashboard"
+  | "Intelligence"
   | "Customers"
   | "Invoices"
   | "Banking"
@@ -34,6 +36,7 @@ export type PageName =
   | "Audit";
 export const NAV_ITEMS: Array<[PageName, LucideIcon]> = [
   ["Dashboard", LayoutDashboard],
+  ["Intelligence", Sparkles],
   ["Customers", Users],
   ["Invoices", ReceiptText],
   ["Banking", Landmark],

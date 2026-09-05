@@ -1,0 +1,23 @@
+version: 1
+application: treasury-atom
+environment: development
+operator_dial: 0
+mode: propose_only
+fail_closed: true
+
+trust_roles:
+  human_reviewer:
+    may: [read, investigate, approve_local_reconciliation]
+  assistant:
+    may: [read_workspace_state, summarize, propose]
+    may_not: [initiate_payment, post_to_erp, claim_live_connector, store_provider_secret]
+
+mutation_gate:
+  required_for: [transaction_create, transaction_update, transaction_delete, reconciliation_decision, approval_decision]
+  requirements: [authenticated_actor, entity_scope, explicit_intent, human_review, audit_receipt]
+  production_verifier: not_configured
+  on_missing_or_stale_verifier: deny_mutation_and_continue_propose_only
+
+operator_controls:
+  halt: disables_all_agent_proposals
+  override: requires_named_owner_expiry_reason_and_audit_receipt

@@ -8,6 +8,7 @@ import './spatial.css';
 import './module.css';
 import './light-theme.css';
 import './motion.css';
+import './intelligence.css';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1 } } });
 
