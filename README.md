@@ -68,6 +68,9 @@ Copy `.env.example` and supply values through your local secret store or hosting
 | `SUPABASE_PUBLISHABLE_KEY` | Browser-safe Supabase publishable key. |
 | `SUPABASE_SECRET_KEY` | Server-only Supabase secret; never use a `VITE_` prefix. |
 | `VITE_API_BASE_URL` | Optional URL when the API is hosted separately from the frontend. |
+| `CUSTOMER_IO_APP_API_KEY` | Future server-only Customer.io App API credential. |
+| `CUSTOMER_IO_TRACK_SITE_ID` | Future server-side Customer.io tracking site identifier. |
+| `CUSTOMER_IO_TRACK_API_KEY` | Future server-only Customer.io Track API credential. |
 
 ## Supabase
 
@@ -101,6 +104,7 @@ For a single Vercel/Supabase architecture, migrate authenticated events to priva
 - Runtime treasury records are still illustrative and in memory.
 - Development password/OTP authentication is not production identity.
 - There is no validated live bank, ERP/GL, email or payment connection.
+- The communication agent creates local previews only; Customer.io delivery is not connected.
 - Evidence file binaries still require a private object-storage adapter.
 - Vercel alone cannot host the current persistent Express SSE process.
 

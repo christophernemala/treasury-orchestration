@@ -8,9 +8,12 @@ import {
   FileCheck2,
   Landmark,
   LockKeyhole,
+  Mail,
   MessageSquareText,
   Network,
+  Route,
   Search,
+  Send,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -32,6 +35,12 @@ const prompts = [
   "What needs attention before close?",
   "Explain the reconciliation exceptions",
   "Which evidence should I review next?",
+];
+
+const communicationJourneys = [
+  { id: "evidence", label: "Evidence request", audience: "Account owners", trigger: "Missing close evidence" },
+  { id: "exception", label: "Exception follow-up", audience: "Treasury reviewers", trigger: "Unresolved exception" },
+  { id: "approval", label: "Approval reminder", audience: "Assigned checkers", trigger: "Approval nearing due date" },
 ];
 
 function buildAnswer(question: string, data: DashboardData, transactions: Transaction[]) {
@@ -60,9 +69,11 @@ export function TreasuryIntelligencePortal({
   const [question, setQuestion] = useState(prompts[0]);
   const [answer, setAnswer] = useState(() => buildAnswer(prompts[0], dashboard, transactions));
   const [activePrompt, setActivePrompt] = useState(prompts[0]);
+  const [journeyId, setJourneyId] = useState("evidence");
   const openItems = transactions.filter((item) => item.status !== "matched");
   const totalCash = dashboard.balances.reduce((sum, item) => sum + item.balance, 0);
   const evidenceCount = dashboard.statements?.length ?? 0;
+  const journey = communicationJourneys.find((item) => item.id === journeyId)!;
   const generated = useMemo(
     () => (lastEventAt ? new Date(lastEventAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Awaiting live snapshot"),
     [lastEventAt],
@@ -157,12 +168,49 @@ export function TreasuryIntelligencePortal({
         </section>
       </div>
 
+      <section className="ti-panel ti-engagement">
+        <header>
+          <div><span>COMMUNICATION AGENT</span><h3>Build a governed finance journey</h3></div>
+          <div className="ti-connector-state"><i /> Customer.io-ready · not connected</div>
+        </header>
+        <div className="ti-engagement-grid">
+          <div className="ti-journey-library">
+            <span className="ti-field-label">Choose a workflow</span>
+            {communicationJourneys.map((item) => (
+              <button key={item.id} className={journeyId === item.id ? "active" : ""} onClick={() => setJourneyId(item.id)} aria-pressed={journeyId === item.id}>
+                <Route size={17} />
+                <span><b>{item.label}</b><small>{item.trigger}</small></span>
+                <ArrowRight size={14} />
+              </button>
+            ))}
+          </div>
+          <div className="ti-journey-canvas" aria-label={`${journey.label} workflow preview`}>
+            <div className="ti-journey-node trigger"><Sparkles size={16} /><span><small>WHEN</small><b>{journey.trigger}</b></span></div>
+            <i className="ti-journey-line" />
+            <div className="ti-journey-node audience"><Database size={16} /><span><small>WHO</small><b>{journey.audience}</b></span></div>
+            <i className="ti-journey-line" />
+            <div className="ti-journey-node review"><ShieldCheck size={16} /><span><small>GATE</small><b>Human approval</b></span></div>
+            <i className="ti-journey-line dashed" />
+            <div className="ti-journey-node disabled"><Send size={16} /><span><small>CHANNEL</small><b>Email disabled</b></span></div>
+          </div>
+          <div className="ti-message-preview">
+            <div className="ti-message-head"><Mail size={17} /><span><b>Draft preview</b><small>No message has been sent</small></span></div>
+            <p><b>Subject:</b> Treasury close review: {journey.label.toLowerCase()}</p>
+            <p>Please review the assigned treasury item and its supporting evidence. The workspace currently shows {openItems.length} open reconciliation item{openItems.length === 1 ? "" : "s"}.</p>
+            <div className="ti-message-meta"><span>Audience<br /><b>{journey.audience}</b></span><span>Delivery<br /><b>Approval required</b></span></div>
+            <button className="ti-review-button" onClick={() => onNavigate("Approvals")}><ShieldCheck size={15} /> Review in approval center</button>
+          </div>
+        </div>
+        <footer className="ti-agent-disclosure"><LockKeyhole size={14} /> Inspired by conversational journey-building patterns. A server-side Customer.io adapter, credentials, recipient consent, and approval-token verification are required before delivery can be enabled.</footer>
+      </section>
+
       <section className="ti-panel ti-sources">
         <header><div><span>SOURCE READINESS</span><h3>Connected evidence, without invented integrations</h3></div><span className="ti-mode">Development workspace</span></header>
         <div className="ti-source-grid">
           <article><div className="ti-source-mark">BS</div><div><b>Bank statements</b><span>CSV/XLSX ingestion available</span></div><em className={evidenceCount ? "ready" : ""}>{evidenceCount ? `${evidenceCount} recorded` : "Awaiting upload"}</em></article>
           <article><div className="ti-source-mark">GL</div><div><b>General ledger</b><span>Local mock journal records</span></div><em className="review">Review required</em></article>
           <article><div className="ti-source-mark">API</div><div><b>Bank and ERP APIs</b><span>Future connector boundary</span></div><em>Not connected</em></article>
+          <article><div className="ti-source-mark">CIO</div><div><b>Customer.io messaging</b><span>Server-side adapter boundary</span></div><em>Not connected</em></article>
         </div>
       </section>
     </div>
