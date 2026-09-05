@@ -27,7 +27,7 @@ scripts/      Local developer utilities
 automation/   Reserved for reviewed n8n workflows and agent configurations
 ```
 
-The original 4K treasury-vault login artwork is stored at `client/public/assets/treasury-vault-4k.webp`; it contains no third-party branding.
+The original Treasury Atom humanoid login artwork is stored at `client/public/assets/treasury-atom-assistant.png`; it contains no third-party branding or embedded interface text.
 
 ## Run locally
 
@@ -125,3 +125,5 @@ For a single Vercel/Supabase architecture, migrate authenticated events to priva
 - [API contract](docs/api.md)
 - [Deployment and hardening](docs/deployment.md)
 - [UI and product audit](docs/ui-audit.md)
+- [KRIBA Escrow integration boundary](docs/kriba-escrow.md)
+- [Treasury Atom redesign brief](docs/treasury-atom-redesign-prompt.md)

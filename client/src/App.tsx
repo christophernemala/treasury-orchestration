@@ -8,6 +8,8 @@ import {
   ChevronRight,
   CircleDollarSign,
   Download,
+  Eye,
+  EyeOff,
   FileSearch,
   Plus,
   RefreshCw,
@@ -60,6 +62,8 @@ function Login({ onDone }: { onDone: () => void }) {
     [password, setPassword] = useState("Treasury123!"),
     [otp, setOtp] = useState("246810"),
     [challenge, setChallenge] = useState(""),
+    [showPassword, setShowPassword] = useState(false),
+    [remember, setRemember] = useState(true),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   async function submit(e: FormEvent) {
@@ -93,19 +97,20 @@ function Login({ onDone }: { onDone: () => void }) {
     <div className="login-shell">
       <div className="login-copy">
         <div className="brand">
-          <span>TA</span> Treasury Atom
+          <span className="atom-mark" aria-hidden="true"><i /><i /><i /><b>TA</b></span>
+          <span className="brand-name">Treasury Atom<small>Governed intelligence</small></span>
         </div>
         <div className="eyebrow">
-          CONTROLLED AUTONOMY · DEVELOPMENT WORKSPACE
+          SECURE TREASURY WORKSPACE
         </div>
         <h1>
           {step === "login"
-            ? "Treasury work, orchestrated."
+            ? "Welcome back."
             : "Confirm it’s you."}
         </h1>
         <p>
           {step === "login"
-            ? "A secure prototype for bank reconciliation, cash investigation and reviewable agent workflows."
+            ? "Sign in to your governed liquidity and risk command center."
             : "Enter the development OTP. No email or external service is contacted."}
         </p>
         <form onSubmit={submit}>
@@ -126,20 +131,21 @@ function Login({ onDone }: { onDone: () => void }) {
           {step === "login" && (
             <label>
               Password
-              <input
-                name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-              />
-            </label>
+              <span className="password-field">
+                <input name="password" value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? "text" : "password"} />
+                <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </span>
+          </label>
           )}
+          {step === "login" && <div className="login-options"><label className="remember"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} /> Remember this device</label><button type="button" className="forgot">Forgot password?</button></div>}
           {error && <div className="error">{error}</div>}
           <button className="primary wide" disabled={busy}>
             {busy
               ? "Checking…"
               : step === "login"
-                ? "Continue securely"
+                ? "Enter Treasury Atom"
                 : "Open workspace"}{" "}
             <ArrowRight size={17} />
           </button>
@@ -147,25 +153,29 @@ function Login({ onDone }: { onDone: () => void }) {
         <div className="demo-note">
           <ShieldCheck size={17} />
           <span>
-            <b>Local development access.</b> Credentials are prefilled. OTP: 246810.
+            <b>Role-based access and audit controls.</b> Development credentials are prefilled. OTP: 246810.
           </span>
         </div>
       </div>
       <div className="robo-panel">
         <div className="robo-grid" />
+        <div className="robo-heading"><span>TREASURY ATOM ASSISTANT</span><b>TA–01</b></div>
         <motion.div
           className="orb"
-          animate={{ y: [0, -12, 0], rotate: [-1, 1, -1] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ y: [0, -5, 0], rotateY: [-1.5, 1.5, -1.5] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
         >
           <img
-            src="/assets/treasury-vault-4k.webp"
-            alt="Contemporary institutional treasury vault and operations environment"
+            src="/assets/treasury-atom-assistant.png"
+            alt="Treasury Atom's silver humanoid assistant in a dark command environment"
           />
         </motion.div>
+        <motion.div className="signal-card liquidity-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }}><span>LIQUIDITY SIGNAL</span><strong>+AED 14.8M</strong><small>Expected Thursday · 94% confidence</small></motion.div>
+        <motion.div className="signal-card policy-card" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .55 }}><span>POLICY CONTROL</span><strong><Check size={15}/> Verified</strong><small>Maker-checker review ready</small></motion.div>
+        <motion.div className="signal-card answer-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .8 }}><span>ATOM RESPONSE</span><p>Moving EMEA funding forward could reduce Thursday’s liquidity gap by AED 3.2M.</p></motion.div>
         <div className="robo-caption">
-          <span className="live-dot" /> Guardrails active{" "}
-          <small>Human approval required for mutations</small>
+          <span className="live-dot" /> TA–01 ONLINE
+          <small>Governed intelligence · 24ms</small>
         </div>
       </div>
     </div>
