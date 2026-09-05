@@ -100,6 +100,8 @@ For a single Vercel/Supabase architecture, migrate authenticated events to priva
 - Evidence-bound Intelligence workspace with deterministic investigation prompts and propose-only controls
 - Operational real-time motion controls persisted per browser
 - Responsive UI with reduced-motion and keyboard support
+- Customer workspace with interactive, truth-labelled ERP/GL, banking, evidence and communications connection points
+- Working workspace shortcuts: `K` focuses record search, `D` toggles the data map, `R` refreshes, and `Esc` clears search
 - Empty Supabase treasury schema applied with RLS; security advisor clean
 - Production build and 11 automated server tests passing
 
@@ -108,6 +110,7 @@ For a single Vercel/Supabase architecture, migrate authenticated events to priva
 - Runtime treasury records are still illustrative and in memory.
 - Development password/OTP authentication is not production identity.
 - There is no validated live bank, ERP/GL, email or payment connection.
+- The CRM connection map reports integration readiness only; it does not initiate external reads or mutations.
 - The communication agent creates local previews only; Customer.io delivery is not connected.
 - Evidence file binaries still require a private object-storage adapter.
 - Vercel alone cannot host the current persistent Express SSE process.

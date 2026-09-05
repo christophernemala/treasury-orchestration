@@ -144,7 +144,7 @@ export function ObsidianDashboard({
           </div>
           <div className="top-actions">
             <span className="sample-pill">Aug 2026 · Illustrative</span>
-            <div className="avatar">AR</div>
+            <div className="avatar" aria-label="Treasury Atom workspace">TA</div>
           </div>
         </header>
         <motion.div

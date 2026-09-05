@@ -33,15 +33,36 @@
 
 ### Typography
 
-- **Heading Font:** Lexend
-- **Body Font:** Source Sans 3
-- **Mood:** corporate, trustworthy, accessible, readable, professional, clean
-- **Google Fonts:** [Lexend + Source Sans 3](https://fonts.google.com/share?selection.family=Lexend:wght@300;400;500;600;700|Source+Sans+3:wght@300;400;500;600;700)
+- **UI and Heading Font:** Instrument Sans
+- **Data / Keycap Font:** IBM Plex Mono
+- **Mood:** Chronicle-inspired geometric clarity, corporate, trustworthy, accessible and data-legible
+- **Licensing boundary:** Chronicle's Diatype is not copied; Instrument Sans is the open web substitute.
+- **Google Fonts:** [Instrument Sans + IBM Plex Mono](https://fonts.google.com/)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 ```
+
+### Semantic module accents
+
+| Context | Accent | Purpose |
+|---|---:|---|
+| Core actions | `#295FD6` | Primary navigation and safe actions |
+| Customers / banking | `#087F7B` | Connected data and customer intelligence |
+| Invoices / ERP | `#6D45C6` | Planning and source-system context |
+| Payments / evidence | `#A16207` | Review-required financial evidence |
+| Exceptions | `#C2415A` | Missing configuration or attention |
+
+Color must always be paired with a text label and icon.
+
+### Keyboard contract
+
+- `K`: focus the active module record search.
+- `D`: show or hide the data connection map.
+- `R`: refresh the active module.
+- `Esc`: clear search and release focus.
+- Shortcut controls must remain visible, clickable, at least 44px tall and non-conflicting with form entry.
 
 ### Spacing Variables
 

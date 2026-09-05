@@ -1,4 +1,7 @@
 :root {
+  font-family: 'Instrument Sans', 'Segoe UI', sans-serif;
+  --font-ui: 'Instrument Sans', 'Segoe UI', sans-serif;
+  --font-data: 'IBM Plex Mono', monospace;
   --bg: #ffffff;
   --panel: #ffffff;
   --panel2: #f7f9fc;
@@ -14,6 +17,9 @@
   --ink: #0f172a;
   --subtle: #f8fafc;
 }
+
+h1, h2, h3, h4, button, input, select, textarea { font-family: var(--font-ui); }
+td, .metric strong, .account-row strong, .amount-block strong { font-variant-numeric: tabular-nums; }
 
 body {
   color: #111827;
