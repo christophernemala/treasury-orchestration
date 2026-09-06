@@ -1,0 +1,96 @@
+version: 1
+application: treasury-atom
+assessed_at: 2026-09-06
+release_decision: no_go
+phase: blueprint
+findings:
+  - id: TA-001
+    severity: critical
+    component: authentication
+    evidence:
+      - server/src/services/auth.ts:8-10
+      - .env.example:4
+    phase_2_owner: identity-security
+    closure_test: production has no local OTP fallback and startup fails on invalid identity configuration
+  - id: TA-002
+    severity: critical
+    component: tenant-isolation-and-events
+    evidence:
+      - server/src/app.ts:135-307
+      - server/src/routes/treasuryStream.ts:6-24
+    phase_2_owner: backend-platform
+    closure_test: complete cross-tenant REST/export/event negative matrix passes
+  - id: TA-003
+    severity: critical
+    component: persistence
+    evidence:
+      - server/src/store/memoryStore.ts
+      - server/src/modules/platform/memoryRepository.ts
+    phase_2_owner: data-platform
+    closure_test: restart and failover tests lose no committed financial state
+  - id: TA-004
+    severity: critical
+    component: financial-command-integrity
+    evidence:
+      - server/src/app.ts:185-266
+      - server/src/modules/platform/router.ts:11
+    phase_2_owner: treasury-engineering
+    closure_test: concurrent retries produce one authorized and audited effect
+  - id: TA-005
+    severity: high
+    component: authorization
+    evidence:
+      - server/src/modules/access/policy.ts
+    phase_2_owner: identity-security
+    closure_test: deny-by-default RBAC ABAC and segregation-of-duties matrix passes
+  - id: TA-006
+    severity: high
+    component: database-rls
+    evidence:
+      - supabase/migrations/202609030001_treasury_foundation.sql:203-231
+    phase_2_owner: data-security
+    closure_test: operation-specific policies deny unauthorized member mutations
+  - id: TA-007
+    severity: high
+    component: audit-and-evidence
+    evidence:
+      - server/src/store/memoryStore.ts:8
+      - supabase/migrations/202609030001_treasury_foundation.sql:221-231
+    phase_2_owner: security-engineering
+    closure_test: audit-chain reconstruction and immutable archive verification pass
+  - id: TA-008
+    severity: high
+    component: money-and-ledger
+    evidence:
+      - server/src/app.ts:25
+      - supabase/migrations/202609030001_treasury_foundation.sql:74-76
+    phase_2_owner: treasury-engineering
+    closure_test: decimal property tests and balanced-ledger constraints pass
+  - id: TA-009
+    severity: high
+    component: api-edge
+    evidence:
+      - server/src/app.ts:46
+    phase_2_owner: application-security
+    closure_test: origin allowlist security headers abuse limits and DAST gates pass
+  - id: TA-010
+    severity: high
+    component: onboarding
+    evidence:
+      - server/src/app.ts:83-122
+    phase_2_owner: identity-product
+    closure_test: only verified invitation and approved tenant role can activate a user
+  - id: TA-011
+    severity: high
+    component: statement-ingestion
+    evidence:
+      - docs/treasury-operations-coverage.md
+    phase_2_owner: integrations
+    closure_test: quarantine malware MIME checksum duplicate and golden-file suite passes
+  - id: TA-012
+    severity: high
+    component: cloud-sdlc
+    evidence:
+      - repository has no infrastructure directory or CI workflow
+    phase_2_owner: cloud-platform
+    closure_test: signed immutable artifact passes IaC SAST SCA secret and image gates

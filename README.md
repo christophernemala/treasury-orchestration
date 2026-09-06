@@ -124,6 +124,8 @@ For a single Vercel/Supabase architecture, migrate authenticated events to priva
 
 ## Documentation
 
+- [Phase 1 production audit and Google Cloud rebuild blueprint](docs/phase-1-production-blueprint.md)
+- [Production verification runbook](docs/verification-runbook.md)
 - [Architecture](docs/architecture.md)
 - [API contract](docs/api.md)
 - [Deployment and hardening](docs/deployment.md)
