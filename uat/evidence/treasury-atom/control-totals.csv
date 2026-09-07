@@ -1,0 +1,10 @@
+control_id,area,source_basis,expected_amount_aed,actual_amount_aed,difference_aed,tolerance_aed,status,reviewer,review_date,approval_required,notes
+TCTRL-001,Raw bank source total,Sum all source bank amounts translated to AED,2591950.00,,,0.00,,Finance Control,,Yes,Includes errors because this is the raw bank statement total.
+TCTRL-002,Normalized ledger total,Valid and warning records excluding validation errors translated to AED,2474950.00,,,0.00,,Finance Control,,Yes,Errors excluded from reportable liquidity and close output.
+TCTRL-003,GL exact matched total,Transactions with match score 100 translated to AED,2380950.00,,,0.00,,Finance Control,,Yes,Uses currency amount date and reference exact match.
+TCTRL-004,Partial allocation total,Allocated portion of partially applied receipt,25000.00,,,0.00,,Treasury Reviewer,,Yes,Must not exceed receipt amount.
+TCTRL-005,Unapplied cash total,Remaining unapplied amount on partially applied receipt,15000.00,,,0.00,,Treasury Reviewer,,Yes,Open investigation required.
+TCTRL-006,Expected cash total,Non-stale promised cash capped at transaction amount,0.00,,,0.00,,Finance Control,,Yes,Stale promise excluded.
+TCTRL-007,Liquidity dashboard total,Dashboard cash total should equal normalized ledger total,2474950.00,,,0.00,,Finance Control,,Yes,Must tie to normalized ledger.
+TCTRL-008,Month-end close total,Close schedule should equal normalized ledger total,2474950.00,,,0.00,,Finance Control,,Yes,Must tie to dashboard total.
+TCTRL-009,Exception count,Errors plus warnings plus disputes plus stale promises,8.00,,,0.00,,Treasury Reviewer,,Yes,Count-based control.
