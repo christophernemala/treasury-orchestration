@@ -1,0 +1,10 @@
+defect_id,linked_test_id,title,severity,owner,detected_date,evidence,root_cause,fix_summary,fix_commit_or_build,retest_date,retest_by,retest_result,release_decision,approver,approval_date
+TDEF-001,TAT-UAT-015,Blank liquidity output is release blocking,Critical,Product Owner,,,,,,,,,Blocked until fixed,,
+TDEF-002,TAT-UAT-016,Unauthorized close override must remain denied,Critical,Security Owner,,,,,,,,,Blocked if failed,,
+TDEF-003,TAT-UAT-017,Unauthorized payment mutation must remain denied,Critical,Security Owner,,,,,,,,,Blocked if failed,,
+TDEF-004,TAT-UAT-002,Duplicate bank statement classification mismatch,High,Treasury Owner,,,,,,,,,Blocked if failed,,
+TDEF-005,TAT-UAT-011,USD translation difference,High,Finance Control,,,,,,,,,Blocked if failed,,
+TDEF-006,TAT-UAT-012,EUR payment translation difference,High,Finance Control,,,,,,,,,Blocked if failed,,
+TDEF-007,TAT-UAT-013,Refresh failure loses last good snapshot,High,Product Owner,,,,,,,,,Blocked if failed,,
+TDEF-008,TAT-UAT-014,Schema change creates blank report,High,Product Owner,,,,,,,,,Blocked if failed,,
+

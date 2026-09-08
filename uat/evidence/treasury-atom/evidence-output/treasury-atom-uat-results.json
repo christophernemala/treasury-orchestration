@@ -1,0 +1,515 @@
+{
+  "repository": "christophernemala/treasury-orchestration",
+  "validationDate": "2026-09-30",
+  "tests": [
+    {
+      "id": "TAT-UAT-001",
+      "scenario": "Normal bank receipt",
+      "passed": true,
+      "actual": "Valid/100",
+      "expected": "Valid/100",
+      "severity": "Low"
+    },
+    {
+      "id": "TAT-UAT-002",
+      "scenario": "Exact duplicate statement line",
+      "passed": true,
+      "actual": "Both duplicate rows flagged",
+      "expected": "Exact duplicate Error",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-003",
+      "scenario": "Missing bank account",
+      "passed": true,
+      "actual": "Error",
+      "expected": "Error",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-004",
+      "scenario": "Missing reference",
+      "passed": true,
+      "actual": "Warning",
+      "expected": "Warning",
+      "severity": "Medium"
+    },
+    {
+      "id": "TAT-UAT-005",
+      "scenario": "Bank charge outflow",
+      "passed": true,
+      "actual": "Valid/-2500",
+      "expected": "Valid/-2500",
+      "severity": "Medium"
+    },
+    {
+      "id": "TAT-UAT-006",
+      "scenario": "Invalid credit/outflow sign",
+      "passed": true,
+      "actual": "Warning",
+      "expected": "Warning",
+      "severity": "Medium"
+    },
+    {
+      "id": "TAT-UAT-007",
+      "scenario": "Partial receipt allocation",
+      "passed": true,
+      "actual": "25000/15000",
+      "expected": "25000/15000",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-008",
+      "scenario": "Disputed bank item",
+      "passed": true,
+      "actual": "Valid/disputed=true",
+      "expected": "Valid/disputed=true",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-009",
+      "scenario": "Future value date",
+      "passed": true,
+      "actual": "Error",
+      "expected": "Error",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-010",
+      "scenario": "Stale settlement promise",
+      "passed": true,
+      "actual": 60000,
+      "expected": 60000,
+      "severity": "Medium"
+    },
+    {
+      "id": "TAT-UAT-011",
+      "scenario": "Multi-currency receipt",
+      "passed": true,
+      "actual": "USD/73450",
+      "expected": "USD/73450",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-012",
+      "scenario": "Multi-currency payment",
+      "passed": true,
+      "actual": "EUR/-40000",
+      "expected": "EUR/-40000",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-013",
+      "scenario": "Refresh failure",
+      "passed": true,
+      "actual": "Last successful snapshot protected",
+      "expected": "Protected",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-014",
+      "scenario": "Schema change",
+      "passed": true,
+      "actual": "Schema rejected",
+      "expected": "Reject missing required bankAccount column",
+      "severity": "High"
+    },
+    {
+      "id": "TAT-UAT-015",
+      "scenario": "Blank output",
+      "passed": true,
+      "actual": "Blank output blocked",
+      "expected": "Blocked",
+      "severity": "Critical"
+    },
+    {
+      "id": "TAT-UAT-016",
+      "scenario": "Unauthorized override",
+      "passed": true,
+      "actual": "Access denied",
+      "expected": "Access denied",
+      "severity": "Critical"
+    },
+    {
+      "id": "TAT-UAT-017",
+      "scenario": "Unauthorized payment mutation",
+      "passed": true,
+      "actual": "Access denied/propose_only",
+      "expected": "Access denied/propose_only",
+      "severity": "Critical"
+    },
+    {
+      "id": "TAT-UAT-018",
+      "scenario": "Month-end close control totals",
+      "passed": true,
+      "actual": 2474950,
+      "expected": 2474950,
+      "severity": "Critical"
+    }
+  ],
+  "validatedTransactions": [
+    {
+      "id": "TX-1001",
+      "bankAccount": "EIB-AED-001",
+      "reference": "GR-88912",
+      "direction": "credit",
+      "valueDate": "2026-09-29",
+      "currency": "AED",
+      "amount": 2350000,
+      "counterparty": "Gulf Retail",
+      "category": "Receipt",
+      "status": "Valid",
+      "disputed": false,
+      "amountAed": 2350000,
+      "findings": [],
+      "bestMatch": {
+        "journalId": "GL-1001",
+        "score": 100,
+        "reasons": [
+          "same currency",
+          "exact amount",
+          "same date",
+          "exact reference"
+        ]
+      }
+    },
+    {
+      "id": "TX-1002A",
+      "bankAccount": "EIB-AED-001",
+      "reference": "DUP-7781",
+      "direction": "credit",
+      "valueDate": "2026-09-28",
+      "currency": "AED",
+      "amount": 50000,
+      "counterparty": "Duplicate Customer",
+      "category": "Receipt",
+      "status": "Error",
+      "disputed": false,
+      "amountAed": 50000,
+      "findings": [
+        {
+          "severity": "Error",
+          "control": "Exact duplicate"
+        }
+      ],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1002B",
+      "bankAccount": "EIB-AED-001",
+      "reference": "DUP-7781",
+      "direction": "credit",
+      "valueDate": "2026-09-28",
+      "currency": "AED",
+      "amount": 50000,
+      "counterparty": "Duplicate Customer",
+      "category": "Receipt",
+      "status": "Error",
+      "disputed": false,
+      "amountAed": 50000,
+      "findings": [
+        {
+          "severity": "Error",
+          "control": "Exact duplicate"
+        }
+      ],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1003",
+      "bankAccount": "",
+      "reference": "MISS-BANK",
+      "direction": "credit",
+      "valueDate": "2026-09-27",
+      "currency": "AED",
+      "amount": 5000,
+      "counterparty": "Missing Bank LLC",
+      "category": "Receipt",
+      "status": "Error",
+      "disputed": false,
+      "amountAed": 5000,
+      "findings": [
+        {
+          "severity": "Error",
+          "control": "Missing bank account"
+        }
+      ],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1004",
+      "bankAccount": "EIB-AED-001",
+      "reference": "",
+      "direction": "credit",
+      "valueDate": "2026-09-27",
+      "currency": "AED",
+      "amount": 7000,
+      "counterparty": "No Ref Customer",
+      "category": "Receipt",
+      "status": "Warning",
+      "disputed": false,
+      "amountAed": 7000,
+      "findings": [
+        {
+          "severity": "Warning",
+          "control": "Missing reference"
+        }
+      ],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1005",
+      "bankAccount": "EIB-AED-001",
+      "reference": "FEE-0901",
+      "direction": "debit",
+      "valueDate": "2026-09-26",
+      "currency": "AED",
+      "amount": -2500,
+      "counterparty": "Bank Charges",
+      "category": "Bank Fee",
+      "status": "Valid",
+      "disputed": false,
+      "amountAed": -2500,
+      "findings": [],
+      "bestMatch": {
+        "journalId": "GL-1005",
+        "score": 100,
+        "reasons": [
+          "same currency",
+          "exact amount",
+          "same date",
+          "exact reference"
+        ]
+      }
+    },
+    {
+      "id": "TX-1006",
+      "bankAccount": "EIB-AED-001",
+      "reference": "CR-WRONG-SIGN",
+      "direction": "credit",
+      "valueDate": "2026-09-25",
+      "currency": "AED",
+      "amount": -1000,
+      "counterparty": "Wrong Sign Customer",
+      "category": "Receipt",
+      "status": "Warning",
+      "disputed": false,
+      "amountAed": -1000,
+      "findings": [
+        {
+          "severity": "Warning",
+          "control": "Credit sign"
+        }
+      ],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1007",
+      "bankAccount": "EIB-AED-001",
+      "reference": "PART-5001",
+      "direction": "credit",
+      "valueDate": "2026-09-24",
+      "currency": "AED",
+      "amount": 40000,
+      "counterparty": "Partial Allocation LLC",
+      "category": "Receipt",
+      "status": "Valid",
+      "disputed": false,
+      "allocatedAmount": 25000,
+      "amountAed": 40000,
+      "findings": [],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1008",
+      "bankAccount": "EIB-AED-001",
+      "reference": "DSP-404",
+      "direction": "credit",
+      "valueDate": "2026-09-23",
+      "currency": "AED",
+      "amount": 30000,
+      "counterparty": "Disputed Counterparty",
+      "category": "Receipt",
+      "status": "Valid",
+      "disputed": true,
+      "amountAed": 30000,
+      "findings": [],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1009",
+      "bankAccount": "EIB-AED-001",
+      "reference": "FUT-1009",
+      "direction": "credit",
+      "valueDate": "2026-10-05",
+      "currency": "AED",
+      "amount": 12000,
+      "counterparty": "Future Dated LLC",
+      "category": "Receipt",
+      "status": "Error",
+      "disputed": false,
+      "amountAed": 12000,
+      "findings": [
+        {
+          "severity": "Error",
+          "control": "Future value date"
+        }
+      ],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1010",
+      "bankAccount": "EIB-AED-001",
+      "reference": "STALE-1010",
+      "direction": "credit",
+      "valueDate": "2026-09-01",
+      "currency": "AED",
+      "amount": 18000,
+      "counterparty": "Stale Promise LLC",
+      "category": "Receipt",
+      "status": "Valid",
+      "disputed": false,
+      "promiseDate": "2026-09-10",
+      "promiseAmount": 18000,
+      "received": false,
+      "amountAed": 18000,
+      "findings": [],
+      "bestMatch": null
+    },
+    {
+      "id": "TX-1011",
+      "bankAccount": "EIB-USD-002",
+      "reference": "USD-771",
+      "direction": "credit",
+      "valueDate": "2026-09-20",
+      "currency": "USD",
+      "amount": 20000,
+      "counterparty": "USD Customer",
+      "category": "Receipt",
+      "status": "Valid",
+      "disputed": false,
+      "promiseDate": "2026-10-03",
+      "promiseAmount": 60000,
+      "received": false,
+      "amountAed": 73450,
+      "findings": [],
+      "bestMatch": {
+        "journalId": "GL-1011",
+        "score": 100,
+        "reasons": [
+          "same currency",
+          "exact amount",
+          "same date",
+          "exact reference"
+        ]
+      }
+    },
+    {
+      "id": "TX-1012",
+      "bankAccount": "EIB-EUR-003",
+      "reference": "EUR-PAY-91",
+      "direction": "debit",
+      "valueDate": "2026-09-18",
+      "currency": "EUR",
+      "amount": -10000,
+      "counterparty": "Euro Supplier",
+      "category": "Supplier Payment",
+      "status": "Valid",
+      "disputed": false,
+      "amountAed": -40000,
+      "findings": [],
+      "bestMatch": {
+        "journalId": "GL-1012",
+        "score": 100,
+        "reasons": [
+          "same currency",
+          "exact amount",
+          "same date",
+          "exact reference"
+        ]
+      }
+    }
+  ],
+  "controlTotals": [
+    {
+      "id": "TCTRL-001",
+      "area": "Raw bank source total",
+      "expected": 2591950,
+      "actual": 2591950,
+      "difference": 0,
+      "passed": true
+    },
+    {
+      "id": "TCTRL-002",
+      "area": "Normalized ledger total",
+      "expected": 2474950,
+      "actual": 2474950,
+      "difference": 0,
+      "passed": true
+    },
+    {
+      "id": "TCTRL-003",
+      "area": "GL exact matched total",
+      "expected": 2380950,
+      "actual": 2380950,
+      "difference": 0,
+      "passed": true
+    },
+    {
+      "id": "TCTRL-004",
+      "area": "Partial allocation total",
+      "expected": 25000,
+      "actual": 25000,
+      "difference": 0,
+      "passed": true
+    },
+    {
+      "id": "TCTRL-005",
+      "area": "Unapplied cash total",
+      "expected": 15000,
+      "actual": 15000,
+      "difference": 0,
+      "passed": true
+    },
+    {
+      "id": "TCTRL-006",
+      "area": "Expected cash total",
+      "expected": 60000,
+      "actual": 60000,
+      "difference": 0,
+      "passed": true
+    },
+    {
+      "id": "TCTRL-007",
+      "area": "Liquidity dashboard total",
+      "expected": 2474950,
+      "actual": 2474950,
+      "difference": 0,
+      "passed": true
+    },
+    {
+      "id": "TCTRL-008",
+      "area": "Month-end close total",
+      "expected": 2474950,
+      "actual": 2474950,
+      "difference": 0,
+      "passed": true
+    },
+    {
+      "id": "TCTRL-009",
+      "area": "Exception count",
+      "expected": 8,
+      "actual": 8,
+      "difference": 0,
+      "passed": true
+    }
+  ],
+  "releaseGate": {
+    "criticalDifferencesZero": true,
+    "allCriticalHighPassed": true,
+    "runnableWithoutCredentials": true,
+    "productionNoGoItemsRemain": true,
+    "signedEvidenceRequired": true,
+    "releaseDecision": "Ready for prototype UAT sign-off; production financial use remains blocked"
+  }
+}

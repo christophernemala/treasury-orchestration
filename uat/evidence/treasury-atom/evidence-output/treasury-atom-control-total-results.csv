@@ -1,0 +1,10 @@
+control_id,area,expected,actual,difference,status
+TCTRL-001,"Raw bank source total",2591950,2591950,0,Passed
+TCTRL-002,"Normalized ledger total",2474950,2474950,0,Passed
+TCTRL-003,"GL exact matched total",2380950,2380950,0,Passed
+TCTRL-004,"Partial allocation total",25000,25000,0,Passed
+TCTRL-005,"Unapplied cash total",15000,15000,0,Passed
+TCTRL-006,"Expected cash total",60000,60000,0,Passed
+TCTRL-007,"Liquidity dashboard total",2474950,2474950,0,Passed
+TCTRL-008,"Month-end close total",2474950,2474950,0,Passed
+TCTRL-009,"Exception count",8,8,0,Passed

@@ -1,0 +1,7 @@
+signoff_area,reviewer_name,role,decision,conditions,signature,date
+Treasury business rules,,Treasury Reviewer,,,,
+Finance control reconciliation,,Finance Control,,,,
+Security and authorization,,Security Reviewer,,,,
+Product release readiness,,Product Owner,,,,
+Final UAT approval,,Treasury Lead,,,,
+

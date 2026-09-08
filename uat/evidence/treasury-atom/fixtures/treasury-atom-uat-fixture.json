@@ -1,0 +1,255 @@
+{
+  "repository": "christophernemala/treasury-orchestration",
+  "validationDate": "2026-09-30",
+  "fxRatesToAed": {
+    "AED": 1,
+    "USD": 3.6725,
+    "EUR": 4
+  },
+  "transactions": [
+    {
+      "id": "TX-1001",
+      "bankAccount": "EIB-AED-001",
+      "reference": "GR-88912",
+      "direction": "credit",
+      "valueDate": "2026-09-29",
+      "currency": "AED",
+      "amount": 2350000,
+      "counterparty": "Gulf Retail",
+      "category": "Receipt",
+      "status": "matched",
+      "disputed": false
+    },
+    {
+      "id": "TX-1002A",
+      "bankAccount": "EIB-AED-001",
+      "reference": "DUP-7781",
+      "direction": "credit",
+      "valueDate": "2026-09-28",
+      "currency": "AED",
+      "amount": 50000,
+      "counterparty": "Duplicate Customer",
+      "category": "Receipt",
+      "status": "unmatched",
+      "disputed": false
+    },
+    {
+      "id": "TX-1002B",
+      "bankAccount": "EIB-AED-001",
+      "reference": "DUP-7781",
+      "direction": "credit",
+      "valueDate": "2026-09-28",
+      "currency": "AED",
+      "amount": 50000,
+      "counterparty": "Duplicate Customer",
+      "category": "Receipt",
+      "status": "unmatched",
+      "disputed": false
+    },
+    {
+      "id": "TX-1003",
+      "bankAccount": "",
+      "reference": "MISS-BANK",
+      "direction": "credit",
+      "valueDate": "2026-09-27",
+      "currency": "AED",
+      "amount": 5000,
+      "counterparty": "Missing Bank LLC",
+      "category": "Receipt",
+      "status": "unmatched",
+      "disputed": false
+    },
+    {
+      "id": "TX-1004",
+      "bankAccount": "EIB-AED-001",
+      "reference": "",
+      "direction": "credit",
+      "valueDate": "2026-09-27",
+      "currency": "AED",
+      "amount": 7000,
+      "counterparty": "No Ref Customer",
+      "category": "Receipt",
+      "status": "unmatched",
+      "disputed": false
+    },
+    {
+      "id": "TX-1005",
+      "bankAccount": "EIB-AED-001",
+      "reference": "FEE-0901",
+      "direction": "debit",
+      "valueDate": "2026-09-26",
+      "currency": "AED",
+      "amount": -2500,
+      "counterparty": "Bank Charges",
+      "category": "Bank Fee",
+      "status": "matched",
+      "disputed": false
+    },
+    {
+      "id": "TX-1006",
+      "bankAccount": "EIB-AED-001",
+      "reference": "CR-WRONG-SIGN",
+      "direction": "credit",
+      "valueDate": "2026-09-25",
+      "currency": "AED",
+      "amount": -1000,
+      "counterparty": "Wrong Sign Customer",
+      "category": "Receipt",
+      "status": "exception",
+      "disputed": false
+    },
+    {
+      "id": "TX-1007",
+      "bankAccount": "EIB-AED-001",
+      "reference": "PART-5001",
+      "direction": "credit",
+      "valueDate": "2026-09-24",
+      "currency": "AED",
+      "amount": 40000,
+      "counterparty": "Partial Allocation LLC",
+      "category": "Receipt",
+      "status": "suggested",
+      "disputed": false,
+      "allocatedAmount": 25000
+    },
+    {
+      "id": "TX-1008",
+      "bankAccount": "EIB-AED-001",
+      "reference": "DSP-404",
+      "direction": "credit",
+      "valueDate": "2026-09-23",
+      "currency": "AED",
+      "amount": 30000,
+      "counterparty": "Disputed Counterparty",
+      "category": "Receipt",
+      "status": "exception",
+      "disputed": true
+    },
+    {
+      "id": "TX-1009",
+      "bankAccount": "EIB-AED-001",
+      "reference": "FUT-1009",
+      "direction": "credit",
+      "valueDate": "2026-10-05",
+      "currency": "AED",
+      "amount": 12000,
+      "counterparty": "Future Dated LLC",
+      "category": "Receipt",
+      "status": "unmatched",
+      "disputed": false
+    },
+    {
+      "id": "TX-1010",
+      "bankAccount": "EIB-AED-001",
+      "reference": "STALE-1010",
+      "direction": "credit",
+      "valueDate": "2026-09-01",
+      "currency": "AED",
+      "amount": 18000,
+      "counterparty": "Stale Promise LLC",
+      "category": "Receipt",
+      "status": "unmatched",
+      "disputed": false,
+      "promiseDate": "2026-09-10",
+      "promiseAmount": 18000,
+      "received": false
+    },
+    {
+      "id": "TX-1011",
+      "bankAccount": "EIB-USD-002",
+      "reference": "USD-771",
+      "direction": "credit",
+      "valueDate": "2026-09-20",
+      "currency": "USD",
+      "amount": 20000,
+      "counterparty": "USD Customer",
+      "category": "Receipt",
+      "status": "matched",
+      "disputed": false,
+      "promiseDate": "2026-10-03",
+      "promiseAmount": 60000,
+      "received": false
+    },
+    {
+      "id": "TX-1012",
+      "bankAccount": "EIB-EUR-003",
+      "reference": "EUR-PAY-91",
+      "direction": "debit",
+      "valueDate": "2026-09-18",
+      "currency": "EUR",
+      "amount": -10000,
+      "counterparty": "Euro Supplier",
+      "category": "Supplier Payment",
+      "status": "matched",
+      "disputed": false
+    }
+  ],
+  "journals": [
+    {
+      "id": "GL-1001",
+      "date": "2026-09-29",
+      "account": "110100",
+      "description": "Gulf Retail Receipt",
+      "amount": 2350000,
+      "currency": "AED",
+      "reference": "GR-88912"
+    },
+    {
+      "id": "GL-1005",
+      "date": "2026-09-26",
+      "account": "610200",
+      "description": "Bank charges",
+      "amount": -2500,
+      "currency": "AED",
+      "reference": "FEE-0901"
+    },
+    {
+      "id": "GL-1011",
+      "date": "2026-09-20",
+      "account": "110200",
+      "description": "USD customer receipt",
+      "amount": 20000,
+      "currency": "USD",
+      "reference": "USD-771"
+    },
+    {
+      "id": "GL-1012",
+      "date": "2026-09-18",
+      "account": "210300",
+      "description": "Euro supplier payment",
+      "amount": -10000,
+      "currency": "EUR",
+      "reference": "EUR-PAY-91"
+    }
+  ],
+  "schemaChangeRecord": {
+    "id": "SCHEMA-001",
+    "bank_account": "EIB-AED-001",
+    "reference": "SCHEMA-REF",
+    "direction": "credit",
+    "valueDate": "2026-09-20",
+    "currency": "AED",
+    "amount": 1000
+  },
+  "refreshFailure": {
+    "source": "bankFeed",
+    "error": "SOURCE_UNAVAILABLE",
+    "lastSuccessfulSnapshotProtected": true
+  },
+  "blankOutput": {
+    "rowCount": 0,
+    "blocked": true
+  },
+  "unauthorizedOverride": {
+    "userRole": "preparer",
+    "attemptedAction": "override_month_end_difference",
+    "expectedDecision": "Access denied"
+  },
+  "unauthorizedPaymentMutation": {
+    "userRole": "viewer",
+    "attemptedAction": "release_payment",
+    "expectedDecision": "Access denied",
+    "paymentAuthority": "propose_only"
+  }
+}
+
