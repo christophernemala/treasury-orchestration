@@ -4,6 +4,10 @@ const now=()=>new Date().toISOString();
 export function createSeedState():StoreState {
   const passwordHash=bcrypt.hashSync('Treasury123!',10);
   return {
+    memberships:[
+      {userId:'usr-admin',tenantId:'tenant-northstar',role:'admin',legalEntityIds:['le-northstar-ae','le-northstar-difc'],active:true},
+      {userId:'usr-treasury',tenantId:'tenant-northstar',role:'treasury',legalEntityIds:['le-northstar-ae','le-northstar-difc'],active:true},
+    ],
     users:[{id:'usr-admin',email:'admin@treasury.local',name:'Amina Rahman',role:'admin',passwordHash,onboarded:true},{id:'usr-treasury',email:'analyst@treasury.local',name:'Omar Nasser',role:'treasury',passwordHash,onboarded:true}],
     statements:[
       {id:'stm-001',bank:'Emirates NBD',account:'Operating • 4921',period:'Aug 2026',currency:'AED',openingBalance:10850000,closingBalance:12642750,status:'review',transactionCount:4},

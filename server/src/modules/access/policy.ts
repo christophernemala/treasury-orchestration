@@ -44,7 +44,6 @@ const treasuryPermissions: Permission[] = [
 export function accessForRole(role: Role) {
   return {
     permissions: role === "admin" ? [...permissions] : treasuryPermissions,
-    legalEntityIds: ["le-northstar-ae", "le-northstar-difc"],
   };
 }
 

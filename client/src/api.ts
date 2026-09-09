@@ -1,4 +1,5 @@
-const ROOT='/api';
+export const API_ROOT=`${(import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')}/api`;
+const ROOT=API_ROOT;
 export const getToken=()=>localStorage.getItem('treasury_token');
 export const setToken=(v:string)=>localStorage.setItem('treasury_token',v);
 export const clearToken=()=>localStorage.removeItem('treasury_token');

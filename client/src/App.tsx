@@ -58,9 +58,9 @@ const statusTone: Record<string, string> = {
 
 function Login({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState<"login" | "otp">("login"),
-    [email, setEmail] = useState("admin@treasury.local"),
-    [password, setPassword] = useState("Treasury123!"),
-    [otp, setOtp] = useState("246810"),
+    [email, setEmail] = useState(import.meta.env.DEV ? "admin@treasury.local" : ""),
+    [password, setPassword] = useState(import.meta.env.DEV ? "Treasury123!" : ""),
+    [otp, setOtp] = useState(""),
     [challenge, setChallenge] = useState(""),
     [showPassword, setShowPassword] = useState(false),
     [remember, setRemember] = useState(true),
@@ -153,7 +153,7 @@ function Login({ onDone }: { onDone: () => void }) {
         <div className="demo-note">
           <ShieldCheck size={17} />
           <span>
-            <b>Role-based access and audit controls.</b> Development credentials are prefilled. OTP: 246810.
+            <b>Membership-based access and audit controls.</b> {import.meta.env.DEV ? 'Local credentials are prefilled. A new development code is generated for each login.' : 'Access requires an assigned workspace membership.'}
           </span>
         </div>
       </div>

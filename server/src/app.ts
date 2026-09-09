@@ -9,12 +9,13 @@ import {
 import { startLogin, verifyOtp } from "./services/auth.js";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "node:crypto";
-import { authenticateToken, requireAdmin } from "./middleware/auth.js";
+import { authenticateToken, legacyScopeAllowed, requireAdmin, requireLegacyScope, requireMembership } from "./middleware/auth.js";
 import treasuryStreamRouter, {
   broadcastTreasurySnapshot,
 } from "./routes/treasuryStream.js";
 import { buildTreasurySnapshot } from "./services/treasuryService.js";
-import { requestContext } from "./middleware/requestContext.js";
+import { requestContext, requirePermission } from "./middleware/requestContext.js";
+import { runtimeConfig } from "./config.js";
 import { ApiError } from "./shared/errors/apiError.js";
 import platformRouter from "./modules/platform/router.js";
 
@@ -42,9 +43,13 @@ const loginSchema = z.object({
 const emit = (_type: string, _payload: unknown) => {};
 
 export function createApp() {
+  const config = runtimeConfig();
   const app = express();
-  app.use(cors({ origin: true }));
   app.use(requestContext);
+  app.use(cors({ origin(origin, callback) {
+    if (!origin || config.origins.includes(origin)) return callback(null, true);
+    callback(new ApiError(403, "ORIGIN_DENIED", "Browser origin is not allowed."));
+  }, methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'], allowedHeaders: ['Authorization', 'Content-Type', 'Idempotency-Key', 'X-Correlation-Id', 'Last-Event-ID'] }));
   app.use(express.json({ limit: "1mb" }));
   app.get("/api/health", (_req, res) =>
     res.json({
@@ -55,18 +60,31 @@ export function createApp() {
   );
   app.get("/api/health/runtime", (_req, res) => {
     const checkedAt = new Date().toISOString();
-    res.status(200).json({
-      status: "propose_only",
+    res.status(config.development ? 200 : 503).json({
+      status: config.development ? "propose_only" : "not_configured",
       canMutate: false,
       checkedAt,
       layers: {
         process: { status: "healthy", checkedAt },
         scheduler: { status: "not_configured", checkedAt },
-        execution: { status: "healthy", checkedAt, mode: "in_memory_development" },
+        execution: { status: config.development ? "healthy" : "not_configured", checkedAt, mode: config.development ? "in_memory_development" : "disabled" },
         governance: { status: "propose_only", checkedAt, reason: "No production verifier or durable approval token store is configured" },
       },
     });
   });
+  // No production identity or durable repository adapter exists yet. Health is
+  // observable, but no development identity, data, mutation or stream is served.
+  if (!config.development) {
+    app.use('/api', (req, res) => {
+      const developmentRoute = ['/auth/signup', '/seed', '/v1/dev/reset'].includes(req.path);
+      res.status(developmentRoute ? 404 : 503).json({ error: {
+        code: developmentRoute ? 'ROUTE_NOT_FOUND' : 'PRODUCTION_NOT_CONFIGURED',
+        message: developmentRoute ? 'Route not found.' : 'Production identity and persistence are not configured.',
+        correlationId: req.correlationId,
+      } });
+    });
+  }
+  if (config.development) {
   app.post("/api/auth/login", async (req, res) => {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success)
@@ -109,7 +127,6 @@ export function createApp() {
       onboarded: false,
     };
     store.state.users.push(user);
-    store.audit(user.email, "account.signup", "user", user.id);
     res
       .status(201)
       .json({
@@ -131,16 +148,19 @@ export function createApp() {
       return res.status(401).json({ error: "Invalid or expired OTP" });
     res.json(result);
   });
+  }
+  if (config.development) {
   app.use(treasuryStreamRouter);
   app.use("/api", authenticateToken);
-  app.use("/api/v1", platformRouter);
+  app.use("/api/v1", requireMembership, platformRouter);
   app.get("/api/me", (req, res) => {
     const u = store.state.users.find((x) => x.id === req.user!.sub)!;
     res.json({
       id: u.id,
       email: u.email,
       name: u.name,
-      role: u.role,
+      role: req.user!.role,
+      tenantId: req.user!.tenantId,
       onboarded: u.onboarded,
       permissions: req.user!.permissions,
       legalEntityIds: req.user!.legalEntityIds,
@@ -150,9 +170,16 @@ export function createApp() {
     const u = store.state.users.find((x) => x.id === req.user!.sub)!;
     u.name = String(req.body.name || u.name);
     u.onboarded = true;
-    store.audit(u.email, "onboarding.complete", "user", u.id);
+    if (legacyScopeAllowed(req.user!)) store.audit(u.email, "onboarding.complete", "user", u.id);
     res.json({ ok: true });
   });
+  app.use('/api', requireMembership, requireLegacyScope, (req, res, next) => {
+    const permission = req.path === '/audit' ? 'audit.read'
+      : req.path.startsWith('/ledger') || req.path.startsWith('/reports') ? 'ledger.read'
+      : req.method === 'GET' ? 'bank.read' : 'bank.reconcile';
+    requirePermission(permission)(req, res, next);
+  });
+  app.get('/api/dashboard', requirePermission('ledger.read'), requirePermission('audit.read'));
   app.get("/api/dashboard", (_req, res) => {
     const s = store.state;
     res.json({
@@ -305,8 +332,8 @@ export function createApp() {
   );
   app.get("/api/statements", (_req, res) => res.json(store.state.statements));
   app.get("/api/audit", (_req, res) => res.json(store.state.audit));
-  app.post("/api/seed", requireAdmin, (req, res) => {
-    store.reset();
+  if (config.development) app.post("/api/seed", requireAdmin, (req, res) => {
+    store.resetTreasuryData();
     store.audit(
       req.user!.email,
       "seed.reset",
@@ -351,6 +378,7 @@ export function createApp() {
       })
       .send(rows.map((r) => r.map(quote).join(",")).join("\n"));
   });
+  }
   app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     if (err instanceof ApiError) {
       return res.status(err.status).json({

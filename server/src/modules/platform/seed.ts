@@ -5,8 +5,8 @@ const occurredAt = "2026-09-01T08:30:00.000Z";
 export function createPlatformSeed(): PlatformState {
   return {
     legalEntities: [
-      { id: "le-northstar-ae", code: "NS-AE", legalName: "Northstar Holdings UAE", country: "AE", baseCurrency: "AED", taxId: "TRN-***-1042", status: "active", version: 3 },
-      { id: "le-northstar-difc", code: "NS-DIFC", legalName: "Northstar Treasury Services DIFC", country: "AE", baseCurrency: "USD", taxId: "DIFC-***-7781", status: "active", version: 2 },
+      { tenantId: "tenant-northstar", id: "le-northstar-ae", code: "NS-AE", legalName: "Northstar Holdings UAE", country: "AE", baseCurrency: "AED", taxId: "TRN-***-1042", status: "active", version: 3 },
+      { tenantId: "tenant-northstar", id: "le-northstar-difc", code: "NS-DIFC", legalName: "Northstar Treasury Services DIFC", country: "AE", baseCurrency: "USD", taxId: "DIFC-***-7781", status: "active", version: 2 },
     ],
     customers: [
       { id: "cus-gulf-retail", legalEntityId: "le-northstar-ae", code: "CUS-1008", legalName: "Gulf Retail LLC", taxId: "TRN-***-8820", terms: "Net 30", creditStatus: "approved", owner: "Sara Malik", status: "active", version: 4 },

@@ -1,10 +1,12 @@
 import { createPlatformSeed } from "./seed.js";
 import type { PlatformState } from "./types.js";
+import { isDevelopment } from "../../config.js";
 
 class PlatformMemoryRepository {
-  state: PlatformState = createPlatformSeed();
+  state: PlatformState = isDevelopment() ? createPlatformSeed() : { legalEntities: [], customers: [], invoices: [], bankAccounts: [], payments: [], escrowAccounts: [], approvals: [], auditEvents: [] };
 
   reset() {
+    if (!isDevelopment()) throw new Error('Development reset is disabled');
     this.state = createPlatformSeed();
   }
 

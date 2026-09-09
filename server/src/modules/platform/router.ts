@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { isDevelopment } from "../../config.js";
+import { requireLegacyScope } from "../../middleware/auth.js";
 import { Router, type Request } from "express";
 import { z } from "zod";
 import { type Permission } from "../access/policy.js";
@@ -8,7 +10,7 @@ import { platformRepository } from "./memoryRepository.js";
 import type { Customer, Invoice, PlatformAuditEvent } from "./types.js";
 
 const router = Router();
-const idempotentResponses = new Map<string, unknown>();
+const idempotentResponses = new Map<string, { body: string; response: unknown }>();
 
 const modules: Array<{ id: string; label: string; permission: Permission; status: string }> = [
   { id: "crm", label: "CRM", permission: "crm.read", status: "available" },
@@ -37,12 +39,18 @@ function audit(req: Request, action: string, subjectType: string, subjectId: str
   platformRepository.state.auditEvents.unshift(event);
 }
 
-function idempotencyScope(req: Request) {
-  return `${req.user!.sub}:${req.path}:${String(req.headers["idempotency-key"])}`;
+function idempotencyScope(req: Request, entityId: string) {
+  return JSON.stringify([req.user!.tenantId, entityId, req.user!.sub, req.method, req.path, req.headers["idempotency-key"]]);
+}
+
+function replay(key: string, body: unknown) {
+  const saved = idempotentResponses.get(key);
+  if (saved && saved.body !== JSON.stringify(body)) throw new ApiError(409, 'IDEMPOTENCY_CONFLICT', 'This key was already used with different data.');
+  return saved?.response;
 }
 
 function entityAllowed(req: Request, entityId: string) {
-  if (!req.user!.legalEntityIds.includes(entityId)) {
+  if (!req.user!.legalEntityIds.includes(entityId) || !platformRepository.state.legalEntities.some(entity => entity.id === entityId && entity.tenantId === req.user!.tenantId && entity.status === 'active')) {
     throw new ApiError(403, "ENTITY_SCOPE_DENIED", "The record is outside your legal-entity scope.");
   }
 }
@@ -83,15 +91,16 @@ router.post("/customers", requirePermission("crm.write"), requireIdempotencyKey,
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return next(new ApiError(400, "CUSTOMER_INVALID", "Customer data is invalid."));
   entityAllowed(req, parsed.data.legalEntityId);
-  const key = idempotencyScope(req);
-  if (idempotentResponses.has(key)) return res.status(201).json(idempotentResponses.get(key));
+  const key = idempotencyScope(req, parsed.data.legalEntityId);
+  const previous = replay(key, parsed.data);
+  if (previous) return res.status(201).json(previous);
   if (platformRepository.state.customers.some((item) => item.legalEntityId === parsed.data.legalEntityId && (item.code === parsed.data.code || item.taxId === parsed.data.taxId))) {
     return next(new ApiError(409, "CUSTOMER_DUPLICATE", "Customer code or tax identifier already exists."));
   }
   const customer: Customer = { id: randomUUID(), ...parsed.data, creditStatus: "review", status: "draft", version: 1 };
   platformRepository.state.customers.push(customer);
   audit(req, "customer.created", "customer", customer.id, customer.legalEntityId);
-  idempotentResponses.set(key, customer);
+  idempotentResponses.set(key, { body: JSON.stringify(parsed.data), response: structuredClone(customer) });
   res.status(201).json(customer);
 });
 
@@ -113,14 +122,17 @@ router.post("/invoices", requirePermission("invoice.create"), requireIdempotency
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return next(new ApiError(400, "INVOICE_INVALID", "Invoice data is invalid."));
   entityAllowed(req, parsed.data.entityId);
-  const key = idempotencyScope(req);
-  if (idempotentResponses.has(key)) return res.status(201).json(idempotentResponses.get(key));
+  const customer = platformRepository.state.customers.find(item => item.id === parsed.data.customerId && item.legalEntityId === parsed.data.entityId);
+  if (!customer) return next(new ApiError(403, 'ENTITY_SCOPE_DENIED', 'Customer must belong to the invoice legal entity.'));
+  const key = idempotencyScope(req, parsed.data.entityId);
+  const previous = replay(key, parsed.data);
+  if (previous) return res.status(201).json(previous);
   const invoice: Invoice = {
     id: randomUUID(), ...parsed.data, number: `INV-${String(platformRepository.state.invoices.length + 24108)}`, openAmount: parsed.data.total, status: "draft", version: 1,
   };
   platformRepository.state.invoices.unshift(invoice);
   audit(req, "invoice.created", "invoice", invoice.id, invoice.entityId);
-  idempotentResponses.set(key, invoice);
+  idempotentResponses.set(key, { body: JSON.stringify(parsed.data), response: structuredClone(invoice) });
   res.status(201).json(invoice);
 });
 
@@ -140,7 +152,7 @@ router.post("/invoices/:id/close", requirePermission("invoice.close"), requireId
   if (!invoice) return next(new ApiError(404, "INVOICE_NOT_FOUND", "Invoice not found."));
   entityAllowed(req, invoice.entityId);
   if (invoice.openAmount !== "0.00" || invoice.status !== "paid") return next(new ApiError(422, "INVOICE_NOT_READY_TO_CLOSE", "Invoice must be fully allocated and paid before controlled closure."));
-  const approval = platformRepository.state.approvals.find((item) => item.subjectId === invoice.id && item.status === "approved");
+  const approval = platformRepository.state.approvals.find((item) => item.subjectId === invoice.id && item.subjectType === 'invoice' && item.entityId === invoice.entityId && item.status === "approved" && item.checkerId && item.checkerId !== item.makerId);
   if (!approval) return next(new ApiError(422, "APPROVAL_REQUIRED", "An approved maker-checker decision is required before closure."));
   invoice.status = "closed";
   invoice.version += 1;
@@ -183,6 +195,7 @@ router.post("/approvals/:id/decisions", requirePermission("master.approve"), req
   const approval = platformRepository.state.approvals.find((item) => item.id === req.params.id);
   if (!approval) return next(new ApiError(404, "APPROVAL_NOT_FOUND", "Approval not found."));
   entityAllowed(req, approval.entityId);
+  if (approval.status !== 'pending') return next(new ApiError(422, 'APPROVAL_ALREADY_DECIDED', 'Only pending approvals may be decided.'));
   if (approval.makerId === req.user!.sub) return next(new ApiError(403, "MAKER_CHECKER_CONFLICT", "The maker cannot approve their own request."));
   approval.status = parsed.data.decision;
   approval.checkerId = req.user!.sub;
@@ -192,7 +205,13 @@ router.post("/approvals/:id/decisions", requirePermission("master.approve"), req
 });
 
 router.get("/audit-events", requirePermission("audit.read"), (req, res) => res.json(platformRepository.scoped("auditEvents", req.user!.legalEntityIds)));
-router.post("/dev/reset", requirePermission("admin.manage"), (_req, res) => {
+router.post("/dev/reset", (_req, _res, next) => {
+  if (!isDevelopment()) return next(new ApiError(404, 'V1_ROUTE_NOT_FOUND', 'Route not found.'));
+  next();
+}, requirePermission("admin.manage"), requireLegacyScope, (req, res, next) => {
+  if (platformRepository.state.legalEntities.some(entity => entity.tenantId !== req.user!.tenantId)) {
+    return next(new ApiError(409, 'RESET_SCOPE_UNSUPPORTED', 'A shared repository cannot be reset through a tenant session.'));
+  }
   platformRepository.reset();
   idempotentResponses.clear();
   res.json({ ok: true, dataMode: "illustrative-development" });

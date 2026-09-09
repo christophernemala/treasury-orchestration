@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import type { ConnectionStatus, TreasurySnapshot } from "../types";
+import { API_ROOT } from "../api";
 
 class FatalStreamError extends Error {}
 
@@ -45,7 +46,7 @@ export function useLiveTreasury(
     let attempts = 0;
     setStatus("connecting");
 
-    void fetchEventSource("/api/treasury/live-stream", {
+    void fetchEventSource(`${API_ROOT}/treasury/live-stream`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: controller.signal,
       openWhenHidden: false,

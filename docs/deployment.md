@@ -2,11 +2,13 @@
 
 ## Local
 
-Run `npm run dev`. Vite serves the UI on `http://127.0.0.1:5173` and proxies `/api` to Express on `http://127.0.0.1:4320`. Use `GET /api/health` for readiness and `npm run check` for the full build/test gate.
+Run `npm run dev`. Vite serves the UI on `http://127.0.0.1:5173` and proxies `/api` to Express on `http://127.0.0.1:4320`. Use `GET /api/health/runtime` for readiness and `npm run check` for the full build/test gate.
+
+**2026-09-09 remediation:** `/api/health` is liveness only. Production requires a non-placeholder `AUTH_SECRET` of at least 32 characters and exact HTTPS origins in `CLIENT_ORIGIN`; `JWT_SECRET` and production `DEV_OTP` are rejected. Configuration alone does not enable production: `/api/health/runtime`, authentication, data APIs and SSE return `503` until real identity and persistence adapters exist. Development signup/reset routes are not registered in production, and production stores start empty. See [the remediation evidence](security-remediation-2026-09-09.md).
 
 ## Supabase
 
-The migrations in `supabase/migrations` create the empty production treasury schema, organization membership, RLS policies, evidence metadata, approval gates and audit receipts. They are already applied to the configured project, with the security advisor returning no findings. To activate it as the application source of truth:
+The migrations in `supabase/migrations` define the empty production treasury schema, organization membership, RLS policies, evidence metadata, approval gates and audit receipts. An earlier deployment note reported that migrations were applied and the security advisor had no findings; that remote state was not verified during this local remediation. No remote database was modified. To activate persistence as the application source of truth:
 
 1. Configure Supabase Auth and provision organization memberships through a trusted admin workflow.
 2. Add `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and the server-only `SUPABASE_SECRET_KEY` through a secrets manager.

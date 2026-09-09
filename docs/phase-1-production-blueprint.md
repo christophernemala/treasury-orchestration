@@ -5,6 +5,8 @@
 **Phase:** 1 — evidence-based blueprint  
 **Release decision:** **NO-GO for production financial data or external mutations**
 
+**Historical evidence:** Findings below describe the audited commit, not the latest remediation. The [2026-09-09 remediation record](security-remediation-2026-09-09.md) documents the local authentication, authorization, origin and SSE fixes and their tests. Production remains no-go; the earlier unidentified 47-file build remains unresolved and is not a prerequisite for this confirmed repository's fixes.
+
 ## 1. Executive summary
 
 Treasury Atom is a useful interaction prototype and modular-monolith starting point, but it is not yet a deployable treasury system of record. The React/Vite client, Express API, authenticated SSE, repository abstraction, permission vocabulary, PostgreSQL schema, RLS foundation, health endpoints, and automated tests are positive foundations. The runtime still uses process memory, development identity, non-tenant legacy routes, global SSE fan-out, and non-durable audit/idempotency controls.

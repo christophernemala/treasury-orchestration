@@ -43,7 +43,7 @@ npm run dev
 
 Open `http://127.0.0.1:5173/app`. Vite proxies `/api` to the Express server at `http://127.0.0.1:4320`, so `VITE_API_BASE_URL` is unnecessary locally.
 
-Local development access uses `admin@treasury.local` / `Treasury123!` with OTP `246810`. It is intentionally local authentication and must be replaced by production identity before deployment.
+Local development access uses `admin@treasury.local` / `Treasury123!`. Each login generates a new development OTP, returned to the local login form; no email is sent. Tokens expire after 15 minutes. Production identity is not implemented, so production authentication, treasury APIs and SSE fail closed. See the [remediation evidence and remaining blockers](docs/security-remediation-2026-09-09.md).
 
 ## Health, reset and quality gates
 
@@ -53,21 +53,22 @@ Invoke-WebRequest http://127.0.0.1:4320/api/health
 npm run check
 ```
 
-- `GET /api/health` checks backend readiness.
+- `GET /api/health` checks process liveness only.
 - `GET /api/health/runtime` reports process, scheduler, execution and governance readiness; development remains deliberately `propose_only`. See [docs/governance.md](docs/governance.md).
-- `POST /api/v1/dev/reset` restores the platform repository to its illustrative seed state; an admin token is required.
-- `POST /api/seed` restores legacy treasury transaction/reconciliation seeds; an admin token is required.
+- `POST /api/v1/dev/reset` restores the platform seed only for a development admin with full demo entity access; it refuses shared-tenant repositories.
+- `POST /api/seed` restores legacy treasury data while preserving users and memberships; full demo scope and admin permission are required. Both reset routes are absent in production.
 - `npm run check` builds both workspaces and runs all server tests.
 
 ## Environment variables
 
-Copy `.env.example` and supply values through your local secret store or hosting provider. Never commit `.env`.
+Use `.env.example` as the environment contract and supply values through your shell, secret store or hosting provider; the Express entrypoint does not automatically load `.env`. Never commit `.env`. `npm run dev` explicitly selects development; `npm start` does not. Unset or unknown `NODE_ENV` values fail closed like production.
 
 | Variable | Purpose |
 | --- | --- |
 | `PORT` | Express API port; defaults to `4320`. |
-| `CLIENT_ORIGIN` | Allowed browser origin for local CORS. |
-| `AUTH_SECRET` | Long random server-side signing secret. |
+| `NODE_ENV` | Only `development` and `test` enable the in-memory prototype. Use `production` in hosting. |
+| `CLIENT_ORIGIN` | Comma-separated exact browser origins. Required outside development; HTTPS only, no wildcard, credentials or path. Local defaults allow port 5173 on localhost and 127.0.0.1. |
+| `AUTH_SECRET` | Non-placeholder signing secret, at least 32 characters. Required outside development/test; otherwise an ephemeral process key is used. `JWT_SECRET` is rejected. |
 | `SUPABASE_URL` | Supabase project API URL. |
 | `SUPABASE_PUBLISHABLE_KEY` | Browser-safe Supabase publishable key. |
 | `SUPABASE_SECRET_KEY` | Server-only Supabase secret; never use a `VITE_` prefix. |
@@ -90,7 +91,7 @@ Configure the project root as `client`, build command `npm run build`, and outpu
 
 ### API and SSE
 
-Deploy `server/dist/index.js` to a Node.js host that supports persistent HTTP connections. Configure TLS, `CLIENT_ORIGIN`, `AUTH_SECRET`, Supabase server variables, health checks and a process supervisor. Deploying only the frontend would leave authentication, transactions and SSE unavailable.
+Production deployment remains blocked. With valid `AUTH_SECRET` and `CLIENT_ORIGIN`, `server/dist/index.js` exposes liveness, but readiness and application APIs return `503` until production identity and persistence adapters exist. After those blockers are resolved, use a host supporting persistent HTTP connections, TLS, secrets management and a process supervisor. Configure readiness against `/api/health/runtime`.
 
 For a single Vercel/Supabase architecture, migrate authenticated events to private Supabase Realtime channels before removing the Express SSE process.
 

@@ -1,4 +1,5 @@
 export interface LegalEntity {
+  tenantId: string;
   id: string;
   code: string;
   legalName: string;
