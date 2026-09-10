@@ -1,67 +1,95 @@
-import { ReactNode, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import React, { ReactNode, useState } from "react";
 import {
-  BadgeCheck,
-  BookOpen,
-  Building2,
-  Landmark,
   LayoutDashboard,
-  LogOut,
-  LockKeyhole,
-  Menu,
-  ReceiptText,
+  TrendingUp,
   ScanSearch,
-  ScrollText,
-  Sparkles,
+  BadgeCheck,
+  WalletCards,
   Send,
-  ShieldCheck,
-  Users,
+  LockKeyhole,
+  FileSpreadsheet,
+  Activity,
+  Link2,
+  Settings,
+  ChevronDown,
+  Building2,
+  Search,
+  Bell,
+  LogOut,
   X,
+  Menu,
+  Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { ConnectionStatus } from "../types";
+import { TreasuryAtomLogo } from "./TreasuryAtomLogo";
 
 export type PageName =
-  | "Dashboard"
-  | "Intelligence"
-  | "Customers"
-  | "Invoices"
-  | "Banking"
+  | "Overview"
+  | "Cash & liquidity"
   | "Reconciliation"
-  | "Payments"
-  | "Escrow"
-  | "Ledger"
-  | "Entities"
   | "Approvals"
-  | "Audit";
-export const NAV_ITEMS: Array<[PageName, LucideIcon]> = [
-  ["Dashboard", LayoutDashboard],
-  ["Intelligence", Sparkles],
-  ["Customers", Users],
-  ["Invoices", ReceiptText],
-  ["Banking", Landmark],
-  ["Reconciliation", ScanSearch],
-  ["Payments", Send],
-  ["Escrow", LockKeyhole],
-  ["Ledger", BookOpen],
-  ["Entities", Building2],
-  ["Approvals", BadgeCheck],
-  ["Audit", ScrollText],
+  | "Collections & settlements"
+  | "Outbound payments"
+  | "Escrow monitoring"
+  | "Reports"
+  | "Agent activity"
+  | "Connections"
+  | "Settings";
+
+export interface NavItemConfig {
+  name: PageName;
+  label: string;
+  icon: LucideIcon;
+  badge?: number | string;
+}
+
+export interface NavGroupConfig {
+  title: string;
+  items: NavItemConfig[];
+}
+
+export const NAV_GROUPS: NavGroupConfig[] = [
+  {
+    title: "Workspace",
+    items: [
+      { name: "Overview", label: "Overview", icon: LayoutDashboard },
+      { name: "Cash & liquidity", label: "Cash & liquidity", icon: TrendingUp },
+      { name: "Reconciliation", label: "Reconciliation", icon: ScanSearch },
+      { name: "Approvals", label: "Approvals", icon: BadgeCheck },
+    ],
+  },
+  {
+    title: "Operations",
+    items: [
+      { name: "Collections & settlements", label: "Collections & settlements", icon: WalletCards },
+      { name: "Outbound payments", label: "Outbound payments", icon: Send },
+      { name: "Escrow monitoring", label: "Escrow monitoring", icon: LockKeyhole },
+    ],
+  },
+  {
+    title: "Intelligence",
+    items: [
+      { name: "Reports", label: "Reports", icon: FileSpreadsheet },
+      { name: "Agent activity", label: "Agent activity", icon: Activity },
+    ],
+  },
+  {
+    title: "System",
+    items: [
+      { name: "Connections", label: "Connections", icon: Link2 },
+      { name: "Settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
-const statusLabel: Record<ConnectionStatus, string> = {
-  connecting: "Connecting",
-  connected: "Live stream connected",
-  reconnecting: "Reconnecting",
-  offline: "Stream offline",
-};
-
-interface Props {
+interface ObsidianDashboardProps {
   page: PageName;
   onPageChange: (page: PageName) => void;
-  connectionStatus: ConnectionStatus;
+  connectionStatus: "connecting" | "connected" | "reconnecting" | "offline";
   lastEventAt: string | null;
+  pendingApprovalsCount?: number;
   onLogout: () => void;
+  onOpenImport?: () => void;
   children: ReactNode;
 }
 
@@ -70,99 +98,144 @@ export function ObsidianDashboard({
   onPageChange,
   connectionStatus,
   lastEventAt,
+  pendingApprovalsCount = 0,
   onLogout,
   children,
-}: Props) {
-  const [open, setOpen] = useState(false);
-  const reduce = useReducedMotion();
-  const updated = lastEventAt
-    ? new Date(lastEventAt).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "Awaiting snapshot";
+}: ObsidianDashboardProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  const updatedTime = lastEventAt
+    ? new Date(lastEventAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "Live snapshot";
+
   return (
-    <div className="obsidian-shell">
-      <a className="skip-link" href="#workspace-content">Skip to workspace</a>
-      <aside className={open ? "open" : ""}>
-        <div className="brand">
-          <span>TA</span> Treasury Atom
+    <div className="app-shell">
+      {/* Dark Graphite Sidebar */}
+      <aside className={`sidebar ${mobileMenuOpen ? "mobile-open" : ""}`}>
+        {/* Brand Header */}
+        <div className="sidebar-brand-wrapper">
+          <TreasuryAtomLogo size={30} showText={true} />
         </div>
-        <button
-          className="close-mobile"
-          onClick={() => setOpen(false)}
-          aria-label="Close navigation"
-        >
-          <X />
+
+        {/* Workspace Selector Dropdown */}
+        <button className="workspace-picker" type="button" aria-label="Current workspace">
+          <div className="workspace-picker-inner">
+            <Building2 size={16} color="#C3A77B" />
+            <span>Treasury workspace</span>
+          </div>
+          <ChevronDown size={14} color="#8E9CA8" />
         </button>
-        <nav>
-          {NAV_ITEMS.map(([name, Icon], index) => (
-            <button
-              key={name}
-              className={page === name ? "active" : ""}
-              aria-pressed={page === name}
-              onClick={() => {
-                onPageChange(name);
-                setOpen(false);
-              }}
-            >
-              <Icon size={18} />
-              <span>{name}</span>
-              <kbd>{index < 9 ? index + 1 : "–"}</kbd>
-            </button>
+
+        {/* Grouped Navigation */}
+        <nav className="sidebar-nav">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.title} className="nav-group">
+              <span className="nav-group-title">{group.title}</span>
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = page === item.name;
+                const badge =
+                  item.name === "Approvals" && pendingApprovalsCount > 0
+                    ? pendingApprovalsCount
+                    : item.badge;
+
+                return (
+                  <button
+                    key={item.name}
+                    type="button"
+                    className={`nav-link-btn ${isActive ? "active" : ""}`}
+                    onClick={() => {
+                      onPageChange(item.name);
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <Icon size={17} />
+                    <span>{item.label}</span>
+                    {badge !== undefined && <span className="nav-badge">{badge}</span>}
+                  </button>
+                );
+              })}
+            </div>
           ))}
         </nav>
-        <div className="aside-control">
-          <ShieldCheck size={18} />
-          <div>
-            <b>Controlled workspace</b>
-            <span>Human approval gates active</span>
-          </div>
-        </div>
-        <button className="logout" onClick={onLogout}>
-          <LogOut size={18} /> Sign out
-        </button>
-      </aside>
-      <main>
-        <header className="topbar">
-          <button
-            className="menu"
-            onClick={() => setOpen(true)}
-            aria-label="Open navigation"
-          >
-            <Menu />
-          </button>
-          <div>
-            <h1>{page}</h1>
-            <span
-              className={`stream-status ${connectionStatus}`}
-              role="status"
-              aria-live="polite"
-            >
-              <i /> {statusLabel[connectionStatus]} · {updated}
+
+        {/* Sidebar Footer */}
+        <div className="sidebar-footer">
+          <div className="sidebar-live-pill">
+            <span className={`status-dot ${connectionStatus}`} />
+            <span>
+              {connectionStatus === "connected"
+                ? "Live sync"
+                : connectionStatus === "reconnecting"
+                ? "Reconnecting"
+                : "Standby"}
             </span>
           </div>
-          <div className="top-actions">
-            <span className="sample-pill">Aug 2026 · Illustrative</span>
-            <div className="avatar" aria-label="Treasury Atom workspace">TA</div>
+          <button
+            type="button"
+            className="nav-link-btn"
+            style={{ color: "#EF7B72" }}
+            onClick={onLogout}
+          >
+            <LogOut size={16} />
+            <span>Sign out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Canvas */}
+      <div className="workspace-main">
+        {/* Top Navigation Bar */}
+        <header className="topbar">
+          <div className="topbar-breadcrumbs">
+            <span>Workspace</span>
+            <span>/</span>
+            <span className="current">{page}</span>
+          </div>
+
+          {/* Global Search */}
+          <div className="topbar-center-search">
+            <div className="search-input-wrapper">
+              <Search size={15} />
+              <input
+                type="text"
+                placeholder="Search accounts, transactions, approvals..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <kbd>⌘ K</kbd>
+            </div>
+          </div>
+
+          {/* Header Right Actions */}
+          <div className="topbar-actions">
+            <button
+              type="button"
+              className="icon-action-btn"
+              aria-label="Notifications"
+              title="Audit notifications"
+            >
+              <Bell size={17} />
+            </button>
+
+            <div
+              className="user-profile-menu"
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              tabIndex={0}
+              role="button"
+            >
+              <div className="user-avatar">JD</div>
+              <span className="user-name">John Doe</span>
+              <ChevronDown size={14} color="#7E8B9B" />
+            </div>
           </div>
         </header>
-        <motion.div
-          id="workspace-content"
-          className="content"
-          initial={reduce ? false : { opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.32, ease: "easeOut" }}
-          key={page}
-        >
-          {children}
-        </motion.div>
-        <footer className="system-footer" aria-label="System information">
-          <span>Treasury Atom · Controlled workspace</span>
-          <span>API health: <b>{connectionStatus === "offline" ? "Unavailable" : "Ready"}</b></span>
-          <span>All financial values remain illustrative until reviewed source evidence is connected.</span>
-        </footer>
-      </main>
+
+        {/* Dynamic Page Content */}
+        <main className="workspace-content">{children}</main>
+      </div>
     </div>
   );
 }

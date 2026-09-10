@@ -99,7 +99,7 @@ export function TreasuryIntelligencePortal({
           </p>
           <div className="ti-hero-actions">
             <button className="primary" onClick={() => onNavigate("Reconciliation")}>Review open items <ArrowRight size={16} /></button>
-            <button className="ti-quiet-button" onClick={() => onNavigate("Audit")}>Inspect audit receipts</button>
+            <button className="ti-quiet-button" onClick={() => onNavigate("Reports")}>Inspect audit receipts</button>
           </div>
         </div>
         <div className="ti-atom-stage" aria-label={`Treasury intelligence status: ${connectionStatus}`}>

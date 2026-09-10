@@ -8,7 +8,17 @@ import { DataConnectionMap } from "./DataConnectionMap";
 type RecordValue = string | number | undefined;
 type Row = Record<string, RecordValue>;
 
-const configs: Record<Exclude<PageName, "Dashboard" | "Intelligence" | "Reconciliation" | "Ledger">, { endpoint: string; kicker: string; description: string; columns: Array<[string, string]> }> = {
+export type EnterpriseModuleName =
+  | "Customers"
+  | "Invoices"
+  | "Banking"
+  | "Payments"
+  | "Escrow"
+  | "Entities"
+  | "Approvals"
+  | "Audit";
+
+const configs: Record<EnterpriseModuleName, { endpoint: string; kicker: string; description: string; columns: Array<[string, string]> }> = {
   Customers: { endpoint: "/v1/customers", kicker: "CUSTOMER MASTER", description: "Entity-scoped counterparties, ownership and credit-control posture.", columns: [["code","Code"],["legalName","Legal name"],["terms","Terms"],["creditStatus","Credit"],["owner","Owner"],["status","Status"]] },
   Invoices: { endpoint: "/v1/invoices", kicker: "RECEIVABLES CONTROL", description: "Controlled invoice lifecycle with fixed-precision values and approval gates.", columns: [["number","Invoice"],["customerId","Customer"],["issueDate","Issued"],["dueDate","Due"],["currency","CCY"],["total","Total"],["openAmount","Open"],["status","Status"]] },
   Banking: { endpoint: "/v1/bank-accounts", kicker: "BANK ACCOUNT VISIBILITY", description: "Illustrative account positions. No live bank connection is represented.", columns: [["bankName","Bank"],["maskedAccount","Account"],["currency","CCY"],["availableBalance","Available"],["feedProvider","Feed"],["status","Status"]] },
@@ -19,12 +29,13 @@ const configs: Record<Exclude<PageName, "Dashboard" | "Intelligence" | "Reconcil
   Audit: { endpoint: "/v1/audit-events", kicker: "IMMUTABLE RECEIPTS", description: "Actor, entity, subject and correlation evidence for material actions.", columns: [["occurredAt","Time"],["action","Action"],["actorId","Actor"],["subjectType","Subject"],["subjectId","Record"],["correlationId","Correlation"]] },
 };
 
+
 function display(value: RecordValue) {
   if (value === undefined || value === "") return "—";
   return String(value).replaceAll("_", " ");
 }
 
-export function EnterpriseModulePage({ page }: { page: keyof typeof configs }) {
+export function EnterpriseModulePage({ page }: { page: EnterpriseModuleName }) {
   const config = configs[page];
   const query = useQuery({ queryKey: ["platform", page], queryFn: () => api<Row[]>(config.endpoint) });
   const records = query.data ?? [];

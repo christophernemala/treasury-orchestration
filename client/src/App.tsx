@@ -1,78 +1,85 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import React, { FormEvent, useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
-  Check,
+  ChevronDown,
   ChevronRight,
-  CircleDollarSign,
-  Download,
   Eye,
   EyeOff,
-  FileSearch,
-  Plus,
-  RefreshCw,
-  Search,
+  Upload,
+  Download,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Clock,
+  Building2,
+  FileText,
+  Lock,
+  ExternalLink,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
-  Unplug,
-  WalletCards,
+  Link2,
+  Plus,
+  Info,
+  Check,
   X,
+  FileSpreadsheet,
+  TrendingUp,
+  Activity,
+  Layers,
+  ArrowUpRight,
 } from "lucide-react";
 import { api, clearToken, downloadCsv, getToken, setToken } from "./api";
-import type { ConnectionStatus, DashboardData, Transaction, TxStatus } from "./types";
 import { useLiveTreasury } from "./hooks/useLiveTreasury";
-import { NAV_ITEMS, ObsidianDashboard } from "./components/ObsidianDashboard";
+import { ObsidianDashboard } from "./components/ObsidianDashboard";
 import type { PageName } from "./components/ObsidianDashboard";
-import { EnterpriseModulePage } from "./components/EnterpriseModulePage";
-import { MotionWorkspace } from "./components/motion/MotionWorkspace";
-import { TreasuryIntelligencePortal } from "./components/TreasuryIntelligencePortal";
+import { TreasuryAtomLogo } from "./components/TreasuryAtomLogo";
+import { AtomIllustration } from "./components/AtomIllustration";
+import type {
+  CashPosition,
+  Statement,
+  Collection,
+  Settlement,
+  OutboundPayment,
+  EscrowAccount,
+  EscrowRelease,
+  Approval,
+  ConnectorStatus,
+  AgentRun,
+} from "./types";
 
-const PAGE_ROUTES: Record<PageName, string> = {
-  Dashboard: "/app",
-  Intelligence: "/app/intelligence",
-  Customers: "/app/crm",
-  Invoices: "/app/invoices",
-  Banking: "/app/banking",
-  Reconciliation: "/app/reconciliation",
-  Payments: "/app/payments",
-  Escrow: "/app/escrow",
-  Ledger: "/app/ledger",
-  Entities: "/app/entities",
-  Approvals: "/app/approvals",
-  Audit: "/app/audit",
-};
+// Exact currency formatting
+function formatMoney(amountStr: string | number, currency = "AED"): string {
+  const num = typeof amountStr === "string" ? parseFloat(amountStr) : amountStr;
+  if (isNaN(num)) return `${currency} 0.00`;
+  return `${currency} ${num.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
 
-const money = (n: number, c = "AED") =>
-  `${c} ${new Intl.NumberFormat("en-AE", { maximumFractionDigits: 0 }).format(n)}`;
-const statusTone: Record<string, string> = {
-  matched: "good",
-  suggested: "violet",
-  unmatched: "warn",
-  exception: "danger",
-  complete: "good",
-  running: "blue",
-  attention: "warn",
-};
-
+// --------------------------------------------------------------------------
+// LOGIN COMPONENT
+// --------------------------------------------------------------------------
 function Login({ onDone }: { onDone: () => void }) {
-  const [step, setStep] = useState<"login" | "otp">("login"),
-    [email, setEmail] = useState(import.meta.env.DEV ? "admin@treasury.local" : ""),
-    [password, setPassword] = useState(import.meta.env.DEV ? "Treasury123!" : ""),
-    [otp, setOtp] = useState(""),
-    [challenge, setChallenge] = useState(""),
-    [showPassword, setShowPassword] = useState(false),
-    [remember, setRemember] = useState(true),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(false);
+  const [step, setStep] = useState<"login" | "otp">("login");
+  const [email, setEmail] = useState(import.meta.env.DEV ? "admin@treasury.local" : "");
+  const [password, setPassword] = useState(import.meta.env.DEV ? "Treasury123!" : "");
+  const [otp, setOtp] = useState("");
+  const [challenge, setChallenge] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
       if (step === "login") {
-        const r = await api<any>("/auth/login", {
+        const r = await api<{ challengeId: string; devOtp?: string }>("/auth/login", {
           method: "POST",
           body: JSON.stringify({ email, password }),
         });
@@ -80,734 +87,1767 @@ function Login({ onDone }: { onDone: () => void }) {
         setOtp(r.devOtp || "");
         setStep("otp");
       } else {
-        const r = await api<any>("/auth/verify-otp", {
+        const r = await api<{ token: string }>("/auth/verify-otp", {
           method: "POST",
           body: JSON.stringify({ challengeId: challenge, otp }),
         });
         setToken(r.token);
         onDone();
       }
-    } catch (e: any) {
-      setError(e.message);
+    } catch (err: any) {
+      setError(err.message || "Authentication failed");
     } finally {
       setBusy(false);
     }
   }
+
   return (
-    <div className="login-shell">
-      <div className="login-copy">
-        <div className="brand">
-          <span className="atom-mark" aria-hidden="true"><i /><i /><i /><b>TA</b></span>
-          <span className="brand-name">Treasury Atom<small>Governed intelligence</small></span>
+    <div className="login-viewport">
+      {/* 3D Glowing Atom Stage on Left */}
+      <div className="login-stage">
+        <AtomIllustration />
+      </div>
+
+      {/* Login Form Panel on Right */}
+      <div className="login-panel-container">
+        <div className="login-header">
+          <TreasuryAtomLogo size={32} textColor="#151B1E" />
+          <h1>{step === "login" ? "Welcome back." : "Confirm it's you."}</h1>
+          <p>
+            {step === "login"
+              ? "Sign in to your governed treasury workspace."
+              : "Enter the single-use 6-digit development OTP."}
+          </p>
         </div>
-        <div className="eyebrow">
-          SECURE TREASURY WORKSPACE
-        </div>
-        <h1>
-          {step === "login"
-            ? "Welcome back."
-            : "Confirm it’s you."}
-        </h1>
-        <p>
-          {step === "login"
-            ? "Sign in to your governed liquidity and risk command center."
-            : "Enter the development OTP. No email or external service is contacted."}
-        </p>
-        <form onSubmit={submit}>
-          <label>
-            {step === "login" ? "Work email" : "One-time passcode"}
-            <input
-              name={step === "login" ? "email" : "otp"}
-              autoFocus
-              value={step === "login" ? email : otp}
-              onChange={(e) =>
-                step === "login"
-                  ? setEmail(e.target.value)
-                  : setOtp(e.target.value)
-              }
-              type={step === "login" ? "email" : "text"}
-            />
-          </label>
-          {step === "login" && (
-            <label>
-              Password
-              <span className="password-field">
-                <input name="password" value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? "text" : "password"} />
-                <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"}>
-                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                </button>
-              </span>
-          </label>
+
+        <form className="login-form" onSubmit={submit}>
+          {step === "login" ? (
+            <>
+              <div className="form-group">
+                <label htmlFor="login-email">Work email</label>
+                <div className="input-with-icon">
+                  <input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    required
+                    autoFocus
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="login-password">Password</label>
+                <div className="input-with-icon">
+                  <input
+                    id="login-password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="field-action"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: "12px",
+                }}
+              >
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(e) => setRemember(e.target.checked)}
+                  />
+                  <span>Remember this device</span>
+                </label>
+                <span style={{ color: "#7E8B9B", cursor: "not-allowed" }}>Forgot password?</span>
+              </div>
+            </>
+          ) : (
+            <div className="form-group">
+              <label htmlFor="login-otp">One-time verification passcode</label>
+              <div className="input-with-icon">
+                <input
+                  id="login-otp"
+                  name="otp"
+                  type="text"
+                  required
+                  autoFocus
+                  placeholder="000000"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  style={{ fontFamily: "var(--font-mono)", fontSize: "18px", letterSpacing: "0.2em" }}
+                />
+              </div>
+            </div>
           )}
-          {step === "login" && <div className="login-options"><label className="remember"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} /> Remember this device</label><button type="button" className="forgot">Forgot password?</button></div>}
-          {error && <div className="error">{error}</div>}
-          <button className="primary wide" disabled={busy}>
-            {busy
-              ? "Checking…"
-              : step === "login"
-                ? "Enter Treasury Atom"
-                : "Open workspace"}{" "}
-            <ArrowRight size={17} />
+
+          {error && (
+            <div className="login-error">
+              <AlertTriangle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <button className="btn-primary" type="submit" disabled={busy}>
+            {busy ? "Authenticating…" : step === "login" ? "Sign in" : "Verify & open workspace"}
+            <ArrowRight size={16} />
           </button>
         </form>
-        <div className="demo-note">
-          <ShieldCheck size={17} />
-          <span>
-            <b>Membership-based access and audit controls.</b> {import.meta.env.DEV ? 'Local credentials are prefilled. A new development code is generated for each login.' : 'Access requires an assigned workspace membership.'}
-          </span>
-        </div>
-      </div>
-      <div className="robo-panel">
-        <div className="robo-grid" />
-        <div className="robo-heading"><span>TREASURY ATOM ASSISTANT</span><b>TA–01</b></div>
-        <motion.div
-          className="orb"
-          animate={{ y: [0, -5, 0], rotateY: [-1.5, 1.5, -1.5] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <img
-            src="/assets/treasury-atom-assistant.png"
-            alt="Treasury Atom's silver humanoid assistant in a dark command environment"
-          />
-        </motion.div>
-        <motion.div className="signal-card liquidity-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }}><span>LIQUIDITY SIGNAL</span><strong>+AED 14.8M</strong><small>Expected Thursday · 94% confidence</small></motion.div>
-        <motion.div className="signal-card policy-card" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .55 }}><span>POLICY CONTROL</span><strong><Check size={15}/> Verified</strong><small>Maker-checker review ready</small></motion.div>
-        <motion.div className="signal-card answer-card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .8 }}><span>ATOM RESPONSE</span><p>Moving EMEA funding forward could reduce Thursday’s liquidity gap by AED 3.2M.</p></motion.div>
-        <div className="robo-caption">
-          <span className="live-dot" /> TA–01 ONLINE
-          <small>Governed intelligence · 24ms</small>
-        </div>
+
+        {step === "otp" && otp && (
+          <div className="dev-otp-card">
+            <strong>Development Authentication</strong>
+            <span style={{ fontSize: "12px", color: "#7A6136" }}>
+              Active single-use OTP for local environment:
+            </span>
+            <span className="dev-otp-code">{otp}</span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function Metric({ label, value, detail, icon: Icon, tone = "blue" }: any) {
-  return (
-    <motion.div className="metric card" whileHover={{ y: -3 }}>
-      <div className={`metric-icon ${tone}`}>
-        <Icon size={19} />
-      </div>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{detail}</small>
-    </motion.div>
-  );
-}
-
-function Dashboard({
-  data,
-  setPage,
-  connectionStatus,
-  lastEventAt,
-}: {
-  data: DashboardData;
-  setPage: (p: PageName) => void;
-  connectionStatus: ConnectionStatus;
-  lastEventAt: string | null;
-}) {
-  return (
-    <>
-      <div className="hero card">
-        <div>
-          <div className="eyebrow">TREASURY CONTROL ROOM</div>
-          <h2>Good morning, Amina.</h2>
-          <p>
-            Three items need a human decision before today’s development close
-            can progress.
-          </p>
-          <button className="primary" onClick={() => setPage("Reconciliation")}>
-            Review exceptions <ArrowRight size={16} />
-          </button>
-        </div>
-        <div className="hero-status">
-          <div
-            className="ring"
-            style={
-              { "--pct": `${data.reconciliation.matchRate * 3.6}deg` } as any
-            }
-          >
-            <b>{data.reconciliation.matchRate}%</b>
-            <span>matched</span>
-          </div>
-          <small>{data.reconciliation.total} seeded transactions · Aug 2026</small>
-        </div>
-      </div>
-      <MotionWorkspace
-        connectionStatus={connectionStatus}
-        matchRate={data.reconciliation.matchRate}
-        exceptions={data.reconciliation.exception + data.reconciliation.unmatched}
-        lastEventAt={lastEventAt}
-      />
-      <div className="metrics">
-        <Metric
-          label="Illustrative cash visibility"
-          value={money(data.balances[0]?.balance || 0)}
-          detail="Emirates NBD · AED"
-          icon={WalletCards}
-        />
-        <Metric
-          label="Reconciliation"
-          value={`${data.reconciliation.matched}/${data.reconciliation.total}`}
-          detail={`${data.reconciliation.suggested} suggestions await review`}
-          icon={FileSearch}
-          tone="violet"
-        />
-        <Metric
-          label="Unapplied cash"
-          value={money(data.unapplied.total)}
-          detail={`${data.unapplied.count} open seeded item`}
-          icon={CircleDollarSign}
-          tone="amber"
-        />
-        <Metric
-          label="Agent guardrails"
-          value="Active"
-          detail="No external actions permitted"
-          icon={ShieldCheck}
-          tone="green"
-        />
-      </div>
-      <div className="dashboard-grid">
-        <section className="card panel">
-          <header>
-            <div>
-              <span className="section-kicker">CASH POSITION</span>
-              <h3>Accounts in view</h3>
-            </div>
-            <span className="sample-pill">Illustrative</span>
-          </header>
-          {data.balances.map((b, i) => (
-            <div className="account-row" key={b.account}>
-              <div className="bank-mark">{i ? "HS" : "EN"}</div>
-              <div>
-                <b>{b.account}</b>
-                <span>{i ? "HSBC UAE" : "Emirates NBD"}</span>
-              </div>
-              <strong>{money(b.balance, b.currency)}</strong>
-              <ChevronRight size={18} />
-            </div>
-          ))}
-        </section>
-        <section className="card panel">
-          <header>
-            <div>
-              <span className="section-kicker">AGENT OPERATIONS</span>
-              <h3>Automation with checkpoints</h3>
-            </div>
-            <button className="icon-button" aria-label="Refresh">
-              <RefreshCw size={16} />
-            </button>
-          </header>
-          {data.agentTasks.map((t) => (
-            <div className="task-row" key={t.id}>
-              <span className={`status-dot ${statusTone[t.status]}`} />
-              <div>
-                <b>{t.name}</b>
-                <span>{t.detail}</span>
-              </div>
-              <span className={`badge ${statusTone[t.status]}`}>
-                {t.status}
-              </span>
-            </div>
-          ))}
-        </section>
-      </div>
-      <section className="card panel timeline">
-        <header>
-          <div>
-            <span className="section-kicker">RECENT CONTROL EVENTS</span>
-            <h3>Audit receipt timeline</h3>
-          </div>
-          <button
-            className="secondary"
-            onClick={() => setPage("Audit")}
-          >
-            View all
-          </button>
-        </header>
-        <div className="audit-grid">
-          {data.audit.slice(0, 4).map((a: any) => (
-            <div className="audit-item" key={a.id}>
-              <ShieldCheck size={15} />
-              <div>
-                <b>{a.action}</b>
-                <span>{a.detail}</span>
-                <small>
-                  {new Date(a.at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
-                  · {a.actor}
-                </small>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </>
-  );
-}
-
-function Transactions({
-  items,
-  reload,
-}: {
-  items: Transaction[];
-  reload: () => void;
-}) {
-  const [q, setQ] = useState(""),
-    [filter, setFilter] = useState("all"),
-    [editing, setEditing] = useState<Transaction | null>(null);
-  const shown = items.filter(
-    (t) =>
-      (filter === "all" || t.status === filter) &&
-      [t.description, t.reference, t.counterparty]
-        .join(" ")
-        .toLowerCase()
-        .includes(q.toLowerCase()),
-  );
-  async function save(e: FormEvent) {
-    e.preventDefault();
-    if (!editing) return;
-    await api(editing.id ? `/transactions/${editing.id}` : "/transactions", {
-      method: editing.id ? "PATCH" : "POST",
-      body: JSON.stringify(editing),
-    });
-    setEditing(null);
-    reload();
-  }
-  return (
-    <section className="card panel table-panel">
-      <header>
-        <div>
-          <span className="section-kicker">MOCK LEDGER</span>
-          <h3>Transactions</h3>
-        </div>
-        <div className="actions">
-          <button className="secondary" onClick={() => downloadCsv()}>
-            <Download size={15} /> Export CSV
-          </button>
-          <button
-            className="primary"
-            onClick={() => {
-              const today = new Date().toISOString().slice(0, 10);
-              setEditing({ id: "", date: today, valueDate: today, description: "", amount: 0, currency: "AED", account: "Operating • 4921", reference: "", status: "unmatched", counterparty: "", category: "Uncategorized" });
-            }}
-          >
-            <Plus size={15} /> Add entry
-          </button>
-        </div>
-      </header>
-      <div className="filters">
-        <label className="search">
-          <Search size={17} />
-          <input
-            aria-label="Search transactions"
-            placeholder="Search reference, payer or description"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-        </label>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          aria-label="Filter by status"
-        >
-          <option value="all">All statuses</option>
-          {["matched", "suggested", "unmatched", "exception"].map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-      </div>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Account</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((t) => (
-              <tr key={t.id}>
-                <td>{t.date.slice(5)}</td>
-                <td>
-                  <b>{t.description}</b>
-                  <span>
-                    {t.reference} · {t.counterparty}
-                  </span>
-                </td>
-                <td>{t.account}</td>
-                <td className={t.amount < 0 ? "negative" : ""}>
-                  {money(t.amount, t.currency)}
-                </td>
-                <td>
-                  <span className={`badge ${statusTone[t.status]}`}>
-                    {t.status}
-                  </span>
-                </td>
-                <td>
-                  <button
-                    className="text-button"
-                    onClick={() => setEditing({ ...t })}
-                  >
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <AnimatePresence>
-        {editing && (
-          <motion.div
-            className="modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.form
-              className="modal"
-              onSubmit={save}
-              initial={{ y: 25, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 25, opacity: 0 }}
-            >
-              <header>
-                <h3>{editing.id ? "Review transaction" : "Record transaction"}</h3>
-                <button
-                  type="button"
-                  className="icon-button"
-                  onClick={() => setEditing(null)}
-                >
-                  <X />
-                </button>
-              </header>
-              <label>
-                Description
-                <input
-                  value={editing.description}
-                  onChange={(e) =>
-                    setEditing({ ...editing, description: e.target.value })
-                  }
-                />
-              </label>
-              <div className="form-grid">
-                <label>
-                  Transaction date
-                  <input type="date" required value={editing.date} onChange={(e) => setEditing({ ...editing, date: e.target.value })} />
-                </label>
-                <label>
-                  Value date
-                  <input type="date" required value={editing.valueDate} onChange={(e) => setEditing({ ...editing, valueDate: e.target.value })} />
-                </label>
-                <label>
-                  Amount
-                  <input type="number" step="0.01" required value={editing.amount} onChange={(e) => setEditing({ ...editing, amount: Number(e.target.value) })} />
-                </label>
-                <label>
-                  Currency
-                  <input maxLength={3} required value={editing.currency} onChange={(e) => setEditing({ ...editing, currency: e.target.value.toUpperCase() })} />
-                </label>
-              </div>
-              <label>
-                Account
-                <input required value={editing.account} onChange={(e) => setEditing({ ...editing, account: e.target.value })} />
-              </label>
-              <div className="form-grid">
-                <label>
-                  Reference
-                  <input value={editing.reference} onChange={(e) => setEditing({ ...editing, reference: e.target.value })} />
-                </label>
-                <label>
-                  Counterparty
-                  <input value={editing.counterparty} onChange={(e) => setEditing({ ...editing, counterparty: e.target.value })} />
-                </label>
-              </div>
-              <label>
-                Status
-                <select
-                  value={editing.status}
-                  onChange={(e) =>
-                    setEditing({
-                      ...editing,
-                      status: e.target.value as TxStatus,
-                    })
-                  }
-                >
-                  {["unmatched", "suggested", "matched", "exception"].map(
-                    (x) => (
-                      <option key={x}>{x}</option>
-                    ),
-                  )}
-                </select>
-              </label>
-              <label>
-                Reviewer note
-                <textarea
-                  value={editing.notes || ""}
-                  onChange={(e) =>
-                    setEditing({ ...editing, notes: e.target.value })
-                  }
-                />
-              </label>
-              <button className="primary">{editing.id ? "Save reviewed change" : "Record transaction"}</button>
-            </motion.form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </section>
-  );
-}
-
-function Reconciliation({
-  items,
-  reload,
-}: {
-  items: Transaction[];
-  reload: () => void;
-}) {
-  const candidates = items.filter((t) => t.status !== "matched");
-  const [selected, setSelected] = useState<Transaction | null>(
-      candidates[0] || null,
-    ),
-    [suggestions, setSuggestions] = useState<any[]>([]),
-    [busy, setBusy] = useState(false);
-  useEffect(() => {
-    if (selected)
-      api<any[]>(`/reconciliation/suggestions/${selected.id}`).then(
-        setSuggestions,
-      );
-  }, [selected?.id]);
-  async function decide(decision: "matched" | "exception") {
-    if (!selected) return;
-    setBusy(true);
-    try {
-      await api(`/reconciliation/${selected.id}`, {
-        method: "POST",
-        body: JSON.stringify({
-          decision,
-          journalId:
-            decision === "matched" ? suggestions[0]?.journal.id : undefined,
-          note: "Human decision recorded in prototype",
-        }),
-      });
-      reload();
-      setSelected(null);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <div className="recon-layout">
-      <section className="card panel recon-list">
-        <header>
-          <div>
-            <span className="section-kicker">REVIEW QUEUE</span>
-            <h3>Needs a decision</h3>
-          </div>
-          <span className="badge warn">{candidates.length} open</span>
-        </header>
-        {candidates.map((t) => (
-          <button
-            className={`recon-item ${selected?.id === t.id ? "active" : ""}`}
-            onClick={() => setSelected(t)}
-            key={t.id}
-          >
-            <span className={`status-dot ${statusTone[t.status]}`} />
-            <div>
-              <b>{t.description}</b>
-              <span>
-                {t.reference} · {money(t.amount, t.currency)}
-              </span>
-            </div>
-            <ChevronRight size={17} />
-          </button>
-        ))}
-      </section>
-      <section className="card panel review-pane">
-        {selected ? (
-          <>
-            <div className="eyebrow">HUMAN APPROVAL GATE</div>
-            <h2>{selected.description}</h2>
-            <p>
-              {selected.account} · {selected.date} · {selected.reference}
-            </p>
-            <div className="amount-block">
-              <span>Statement amount</span>
-              <strong>{money(selected.amount, selected.currency)}</strong>
-            </div>
-            <h3>Agent suggestion</h3>
-            {suggestions[0] ? (
-              <div className="suggestion">
-                <div className="confidence">
-                  <Sparkles size={16} />
-                  <b>{suggestions[0].score}% confidence</b>
-                </div>
-                <strong>{suggestions[0].journal.description}</strong>
-                <span>
-                  {suggestions[0].journal.reference} ·{" "}
-                  {money(
-                    suggestions[0].journal.amount,
-                    suggestions[0].journal.currency,
-                  )}
-                </span>
-                <small>
-                  Based on exact amount, reference, currency and date proximity.
-                </small>
-              </div>
-            ) : (
-              <div className="empty">
-                <Unplug />
-                <b>No safe suggestion</b>
-                <span>
-                  Investigate manually; the agent will not force a match.
-                </span>
-              </div>
-            )}
-            <div className="gate-note">
-              <ShieldCheck />
-              <div>
-                <b>Nothing posts automatically</b>
-                <span>
-                  This action updates only the local development ledger and
-                  writes an audit receipt.
-                </span>
-              </div>
-            </div>
-            <div className="actions">
-              <button
-                disabled={!suggestions[0] || busy}
-                className="primary"
-                onClick={() => decide("matched")}
-              >
-                <Check size={16} /> Approve match
-              </button>
-              <button
-                disabled={busy}
-                className="secondary danger-text"
-                onClick={() => decide("exception")}
-              >
-                Mark exception
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="empty tall">
-            <Check />
-            <b>Queue reviewed</b>
-            <span>Select another item or return to the dashboard.</span>
-          </div>
-        )}
-      </section>
-    </div>
-  );
-}
-
-function SimplePage({
-  title,
-  kicker,
-  children,
-}: {
-  title: string;
-  kicker: string;
-  children: any;
-}) {
-  return (
-    <section className="card panel">
-      <header>
-        <div>
-          <span className="section-kicker">{kicker}</span>
-          <h3>{title}</h3>
-        </div>
-        <span className="sample-pill">Local development data</span>
-      </header>
-      {children}
-    </section>
-  );
-}
-
+// --------------------------------------------------------------------------
+// MAIN APPLICATION
+// --------------------------------------------------------------------------
 export function App() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [token, setTokenState] = useState<string | null>(() => getToken());
+  const [page, setPage] = useState<PageName>("Overview");
+  const [selectedEntity, setSelectedEntity] = useState<string>("all");
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("AED");
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showMetricModal, setShowMetricModal] = useState(false);
+  const [showNewPaymentModal, setShowNewPaymentModal] = useState(false);
+  const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
+
   const queryClient = useQueryClient();
-  const page = (Object.entries(PAGE_ROUTES).find(([, path]) => path === location.pathname)?.[0] as PageName | undefined) ?? "Dashboard";
-  const setPage = (next: PageName) => navigate(PAGE_ROUTES[next]);
-  const [authed, setAuthed] = useState(!!getToken()),
-    [data, setData] = useState<DashboardData | null>(null),
-    [tx, setTx] = useState<Transaction[]>([]);
-  async function reload() {
-    if (!getToken()) return;
-    try {
-      const [d, t] = await Promise.all([
-        api<DashboardData>("/dashboard"),
-        api<Transaction[]>("/transactions"),
-      ]);
-      setData(d);
-      setTx(t);
-    } catch {
-      clearToken();
-      setAuthed(false);
-    }
+  const { snapshot, status: connectionStatus, lastEventAt } = useLiveTreasury(null, token);
+
+  // Queries
+  const cashPositionQuery = useQuery({
+    queryKey: ["cash-positions", selectedCurrency, selectedEntity],
+    queryFn: () => {
+      const entityParam = selectedEntity !== "all" ? `&entityId=${selectedEntity}` : "";
+      return api<CashPosition>(`/v1/cash-positions?currency=${selectedCurrency}${entityParam}`);
+    },
+    enabled: !!token,
+  });
+
+  const statementsQuery = useQuery({
+    queryKey: ["statements", selectedEntity],
+    queryFn: () => {
+      const entityParam = selectedEntity !== "all" ? `?entityId=${selectedEntity}` : "";
+      return api<Statement[]>(`/v1/statements${entityParam}`);
+    },
+    enabled: !!token,
+  });
+
+  const approvalsQuery = useQuery({
+    queryKey: ["approvals", selectedEntity],
+    queryFn: () => {
+      const entityParam = selectedEntity !== "all" ? `?entityId=${selectedEntity}` : "";
+      return api<Approval[]>(`/v1/approvals${entityParam}`);
+    },
+    enabled: !!token,
+  });
+
+  const collectionsQuery = useQuery({
+    queryKey: ["collections", selectedEntity],
+    queryFn: () => {
+      const entityParam = selectedEntity !== "all" ? `?entityId=${selectedEntity}` : "";
+      return api<Collection[]>(`/v1/collections${entityParam}`);
+    },
+    enabled: !!token,
+  });
+
+  const settlementsQuery = useQuery({
+    queryKey: ["settlements", selectedEntity],
+    queryFn: () => {
+      const entityParam = selectedEntity !== "all" ? `?entityId=${selectedEntity}` : "";
+      return api<Settlement[]>(`/v1/settlements${entityParam}`);
+    },
+    enabled: !!token,
+  });
+
+  const paymentsQuery = useQuery({
+    queryKey: ["outbound-payments", selectedEntity],
+    queryFn: () => {
+      const entityParam = selectedEntity !== "all" ? `?entityId=${selectedEntity}` : "";
+      return api<OutboundPayment[]>(`/v1/payments/outbound${entityParam}`);
+    },
+    enabled: !!token,
+  });
+
+  const escrowAccountsQuery = useQuery({
+    queryKey: ["escrow-accounts", selectedEntity],
+    queryFn: () => {
+      const entityParam = selectedEntity !== "all" ? `?entityId=${selectedEntity}` : "";
+      return api<EscrowAccount[]>(`/v1/escrow/accounts${entityParam}`);
+    },
+    enabled: !!token,
+  });
+
+  const escrowReleasesQuery = useQuery({
+    queryKey: ["escrow-releases", selectedEntity],
+    queryFn: () => {
+      const entityParam = selectedEntity !== "all" ? `?entityId=${selectedEntity}` : "";
+      return api<EscrowRelease[]>(`/v1/escrow/releases${entityParam}`);
+    },
+    enabled: !!token,
+  });
+
+  const connectorsQuery = useQuery({
+    queryKey: ["connectors"],
+    queryFn: () => api<ConnectorStatus[]>("/v1/connectors"),
+    enabled: !!token,
+  });
+
+  const agentRunsQuery = useQuery({
+    queryKey: ["agent-runs"],
+    queryFn: () => api<AgentRun[]>("/v1/agents/runs"),
+    enabled: !!token,
+  });
+
+  function handleLogout() {
+    clearToken();
+    setTokenState(null);
   }
-  useEffect(() => {
-    if (authed) reload();
-  }, [authed]);
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (
-        ["INPUT", "TEXTAREA", "SELECT"].includes(
-          (e.target as HTMLElement).tagName,
-        )
-      )
-        return;
-      const n = Number(e.key);
-      if (n >= 1 && n <= NAV_ITEMS.length) navigate(PAGE_ROUTES[NAV_ITEMS[n - 1][0]]);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [navigate]);
-  const { snapshot, status, lastEventAt } = useLiveTreasury(data, getToken());
-  const liveData = useMemo(
-    () => (data && snapshot ? { ...data, ...snapshot } : data),
-    [data, snapshot],
-  );
-  useEffect(() => {
-    if (snapshot?.generatedAt) queryClient.invalidateQueries({ queryKey: ["platform"] });
-  }, [snapshot?.generatedAt, queryClient]);
-  const content = useMemo(() => {
-    if (!liveData)
-      return <div className="loading">Loading controlled workspace…</div>;
-    if (page === "Dashboard")
-      return <Dashboard data={liveData} setPage={setPage} connectionStatus={status} lastEventAt={lastEventAt} />;
-    if (page === "Ledger")
-      return <Transactions items={tx} reload={reload} />;
-    if (page === "Reconciliation")
-      return <Reconciliation items={tx} reload={reload} />;
-    if (page === "Intelligence")
-      return <TreasuryIntelligencePortal dashboard={liveData} transactions={tx} connectionStatus={status} lastEventAt={lastEventAt} onNavigate={setPage} />;
-    return <EnterpriseModulePage page={page as Exclude<PageName, "Dashboard" | "Intelligence" | "Reconciliation" | "Ledger">} />;
-  }, [liveData, page, tx, status, lastEventAt]);
-  if (!authed) return <Login onDone={() => { setAuthed(true); navigate("/app"); }} />;
+
+  if (!token) {
+    return <Login onDone={() => setTokenState(getToken())} />;
+  }
+
+  const pendingApprovalsCount = approvalsQuery.data?.filter((a) => a.status === "pending").length ?? 0;
+  const cashPos = cashPositionQuery.data;
+
   return (
     <ObsidianDashboard
       page={page}
       onPageChange={setPage}
-      connectionStatus={status}
+      connectionStatus={connectionStatus}
       lastEventAt={lastEventAt}
-      onLogout={() => {
-        clearToken();
-        setAuthed(false);
-        navigate("/");
-      }}
+      pendingApprovalsCount={pendingApprovalsCount}
+      onLogout={handleLogout}
+      onOpenImport={() => setShowImportModal(true)}
     >
-      {content}
+      {/* --------------------------------------------------------------------
+          OVERVIEW SCREEN (MATCHING CONCEPT DESIGN)
+          -------------------------------------------------------------------- */}
+      {page === "Overview" && (
+        <>
+          <div className="hero-banner">
+            <div className="hero-title-row">
+              <div className="hero-copy">
+                <h1>Know your cash. Decide with clarity.</h1>
+                <p>Connect your sources to build a verified cash position.</p>
+              </div>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setShowImportModal(true)}
+              >
+                <Upload size={16} />
+                <span>Import statement</span>
+              </button>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="filter-bar">
+              <div className="filter-selectors">
+                <select
+                  className="filter-select"
+                  value={selectedEntity}
+                  onChange={(e) => setSelectedEntity(e.target.value)}
+                >
+                  <option value="all">All entities</option>
+                  <option value="le-northstar-ae">Northstar UAE Ltd (Abu Dhabi)</option>
+                  <option value="le-northstar-difc">Northstar Treasury DIFC (Dubai)</option>
+                </select>
+
+                <select
+                  className="filter-select"
+                  value={selectedCurrency}
+                  onChange={(e) => setSelectedCurrency(e.target.value)}
+                >
+                  <option value="AED">AED</option>
+                  <option value="USD">USD</option>
+                </select>
+
+                <div className="filter-select" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Clock size={13} color="#7E8B9B" />
+                  <span>As of today</span>
+                </div>
+              </div>
+
+              <div className="connection-status-pill">
+                <span className={`status-dot ${connectorsQuery.data?.length ? "connected" : "offline"}`} />
+                <span>
+                  {connectorsQuery.data?.length
+                    ? `${connectorsQuery.data.filter((c) => c.status === "connected" || c.status === "test_mode").length} sources connected`
+                    : "No sources connected"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* KPI Row */}
+          <div className="kpi-row">
+            <div className="kpi-card">
+              <div className="kpi-card-header">
+                <span className="kpi-title">
+                  Available cash
+                  <Info
+                    size={14}
+                    className="kpi-info-btn"
+                    onClick={() => setShowMetricModal(true)}
+                  />
+                </span>
+              </div>
+              <div className="kpi-value">
+                {cashPos ? formatMoney(cashPos.availableCash, cashPos.currency) : "—"}
+              </div>
+              <div className="kpi-subtitle">Bank cash less restrictions</div>
+            </div>
+
+            <div className="kpi-card">
+              <div className="kpi-card-header">
+                <span className="kpi-title">
+                  Unreconciled value
+                  <Info
+                    size={14}
+                    className="kpi-info-btn"
+                    onClick={() => setShowMetricModal(true)}
+                  />
+                </span>
+              </div>
+              <div className="kpi-value">
+                {formatMoney(
+                  statementsQuery.data?.reduce(
+                    (acc, s) => acc + (s.status === "unreconciled" ? parseFloat(s.closingBalance) : 0),
+                    0
+                  ) ?? 0,
+                  selectedCurrency
+                )}
+              </div>
+              <div className="kpi-subtitle">Awaiting transactions</div>
+            </div>
+
+            <div className="kpi-card">
+              <div className="kpi-card-header">
+                <span className="kpi-title">
+                  Pending approvals
+                  <Info
+                    size={14}
+                    className="kpi-info-btn"
+                    onClick={() => setShowMetricModal(true)}
+                  />
+                </span>
+              </div>
+              <div className="kpi-value">
+                {pendingApprovalsCount === 0
+                  ? "—"
+                  : `${pendingApprovalsCount} request${pendingApprovalsCount > 1 ? "s" : ""}`}
+              </div>
+              <div className="kpi-subtitle">
+                {pendingApprovalsCount === 0 ? "No requests submitted" : "Maker-checker review pending"}
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Column Middle Grid */}
+          <div className="overview-grid">
+            {/* Left Column (2/3) */}
+            <div className="overview-left">
+              {/* Cash Visibility Card */}
+              <div className="overview-card">
+                <div className="overview-card-header">
+                  <h2>Cash visibility</h2>
+                  <span className="header-context">Connect your data to see your consolidated position.</span>
+                </div>
+
+                <div className="cash-flow-diagram-wrapper">
+                  {/* Interactive Visual Flow */}
+                  <div className="flow-visual-side">
+                    <div className="source-nodes-row">
+                      <div className="source-node">
+                        <Building2 size={20} className="source-node-icon" />
+                        <span>Bank accounts</span>
+                      </div>
+                      <div className="source-node">
+                        <FileText size={20} className="source-node-icon" />
+                        <span>Statements</span>
+                      </div>
+                      <div className="source-node">
+                        <Lock size={20} className="source-node-icon" />
+                        <span>Restrictions</span>
+                      </div>
+                    </div>
+
+                    {/* Connecting SVG lines */}
+                    <svg className="flow-connectors-svg" viewBox="0 0 300 48" fill="none">
+                      <path d="M 50 0 V 24 H 150 V 48" stroke="#C3A77B" strokeWidth="1.5" strokeDasharray="3 3" />
+                      <path d="M 150 0 V 48" stroke="#C3A77B" strokeWidth="1.5" strokeDasharray="3 3" />
+                      <path d="M 250 0 V 24 H 150 V 48" stroke="#C3A77B" strokeWidth="1.5" strokeDasharray="3 3" />
+                    </svg>
+
+                    <div className="flow-target-node">
+                      <div className="target-circle-atom">
+                        <TreasuryAtomLogo size={26} showText={false} />
+                      </div>
+                      <span>Your verified cash position</span>
+                    </div>
+                  </div>
+
+                  {/* Callout Side */}
+                  <div className="flow-callout-side">
+                    <h3>Your cash position starts with a source.</h3>
+                    <p>
+                      Connect a bank account or import a statement to build your consolidated cash position with
+                      exact decimal reconciliation and restricted cash segregation.
+                    </p>
+                    <div className="flow-callout-actions">
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => setPage("Connections")}
+                      >
+                        <Link2 size={15} />
+                        <span>Connect account</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => setShowImportModal(true)}
+                      >
+                        <Upload size={15} />
+                        <span>Import a file</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reconciliation Workspace Table */}
+              <div className="overview-card">
+                <div className="overview-card-header">
+                  <h2>Reconciliation workspace</h2>
+                  <button
+                    type="button"
+                    className="calc-metric-link"
+                    onClick={() => setPage("Reconciliation")}
+                  >
+                    <span>Open workspace</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+
+                {statementsQuery.data && statementsQuery.data.length > 0 ? (
+                  <div className="treasury-table-wrapper">
+                    <table className="treasury-table">
+                      <thead>
+                        <tr>
+                          <th>Account</th>
+                          <th>Statement date</th>
+                          <th>Currency</th>
+                          <th style={{ textAlign: "right" }}>Closing balance</th>
+                          <th>Lines</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statementsQuery.data.map((stmt) => (
+                          <tr key={stmt.id}>
+                            <td style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}>
+                              {stmt.accountId}
+                            </td>
+                            <td>{stmt.statementDate}</td>
+                            <td>{stmt.currency}</td>
+                            <td className="num-cell">
+                              {formatMoney(stmt.closingBalance, stmt.currency)}
+                            </td>
+                            <td>{stmt.lineCount} lines</td>
+                            <td>
+                              <span
+                                className={`badge ${
+                                  stmt.status === "reconciled" ? "badge-mint" : "badge-amber"
+                                }`}
+                              >
+                                {stmt.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="empty-state-box">
+                    <FileText size={32} className="empty-state-icon" />
+                    <p>Imported statements will appear here.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Agent Activity Card */}
+              <div className="agent-activity-banner">
+                <div className="agent-activity-left">
+                  <Activity size={18} color="#2E7D68" />
+                  <div>
+                    <div className="agent-activity-title">
+                      Agent activity
+                      <span className="badge badge-mint">TA-01 Reconciler Active</span>
+                    </div>
+                    <div className="agent-activity-subtitle">
+                      {agentRunsQuery.data?.[0]
+                        ? `Last run completed with ${agentRunsQuery.data[0].proposalCount} proposals generated`
+                        : "Ready to analyze incoming statement transactions"}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="agent-activity-link"
+                  onClick={() => setPage("Agent activity")}
+                >
+                  <span>View activity</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Right Column (1/3): How this is calculated */}
+            <div className="calculation-card">
+              <h2>How this is calculated</h2>
+
+              <div className="calc-formula-box">
+                <span className="calc-formula-tag">Available cash</span>
+                <span className="calc-formula-text">Bank cash — restricted cash</span>
+                <span className="calc-formula-note">
+                  Reservations are deducted only when not already reflected in the source balance.
+                </span>
+              </div>
+
+              <div className="evidence-section">
+                <span className="evidence-title">Required evidence</span>
+                <ul className="evidence-list">
+                  <li className="evidence-item">
+                    <span className="evidence-circle verified" />
+                    <span>Bank balance</span>
+                  </li>
+                  <li className="evidence-item">
+                    <span className="evidence-circle verified" />
+                    <span>Restriction records</span>
+                  </li>
+                  <li className="evidence-item">
+                    <span className="evidence-circle verified" />
+                    <span>Source timestamp</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                className="calc-metric-link"
+                onClick={() => setShowMetricModal(true)}
+              >
+                <span>View metric definition</span>
+                <ArrowUpRight size={14} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* --------------------------------------------------------------------
+          CASH & LIQUIDITY SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Cash & liquidity" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Cash positions & accounts</h2>
+                <span className="header-context">
+                  Exact decimal consolidated balances and segregated restricted holds.
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <select
+                  className="filter-select"
+                  value={selectedCurrency}
+                  onChange={(e) => setSelectedCurrency(e.target.value)}
+                >
+                  <option value="AED">AED</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+
+            {cashPos && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "20px" }}>
+                <div style={{ padding: "14px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Total Bank Cash</div>
+                  <div style={{ fontSize: "18px", fontWeight: 700, fontFamily: "var(--font-heading)" }}>
+                    {formatMoney(cashPos.bankCash, cashPos.currency)}
+                  </div>
+                </div>
+                <div style={{ padding: "14px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Restricted Cash</div>
+                  <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--coral)", fontFamily: "var(--font-heading)" }}>
+                    {formatMoney(cashPos.restrictedCash, cashPos.currency)}
+                  </div>
+                </div>
+                <div style={{ padding: "14px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Available Liquidity</div>
+                  <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--mint)", fontFamily: "var(--font-heading)" }}>
+                    {formatMoney(cashPos.availableCash, cashPos.currency)}
+                  </div>
+                </div>
+                <div style={{ padding: "14px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Undrawn Facilities</div>
+                  <div style={{ fontSize: "18px", fontWeight: 700, color: "var(--blue)", fontFamily: "var(--font-heading)" }}>
+                    {formatMoney(cashPos.undrawnFacilities, cashPos.currency)}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="treasury-table-wrapper">
+              <table className="treasury-table">
+                <thead>
+                  <tr>
+                    <th>Account number / IBAN</th>
+                    <th>Bank</th>
+                    <th>Currency</th>
+                    <th style={{ textAlign: "right" }}>Reported balance</th>
+                    <th style={{ textAlign: "right" }}>Restricted hold</th>
+                    <th style={{ textAlign: "right" }}>Available cash</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cashPos?.accounts.map((acc) => (
+                    <tr key={acc.accountId}>
+                      <td style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}>
+                        {acc.accountNumber}
+                      </td>
+                      <td>{acc.bankName}</td>
+                      <td>{acc.currency}</td>
+                      <td className="num-cell">{formatMoney(acc.bankBalance, acc.currency)}</td>
+                      <td className="num-cell" style={{ color: "var(--coral)" }}>
+                        {formatMoney(acc.restrictedHold, acc.currency)}
+                      </td>
+                      <td className="num-cell" style={{ color: "var(--mint)" }}>
+                        {formatMoney(acc.availableCash, acc.currency)}
+                      </td>
+                      <td>
+                        <span className="badge badge-mint">Verified</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          RECONCILIATION SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Reconciliation" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Statement reconciliation workspace</h2>
+                <span className="header-context">
+                  CAMT.053 / MT940 statement match proposals and exceptions review.
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setShowImportModal(true)}
+              >
+                <Upload size={15} />
+                <span>Import statement</span>
+              </button>
+            </div>
+
+            <div className="treasury-table-wrapper">
+              <table className="treasury-table">
+                <thead>
+                  <tr>
+                    <th>Statement ID</th>
+                    <th>Account</th>
+                    <th>Date</th>
+                    <th>Opening</th>
+                    <th>Closing</th>
+                    <th>Lines</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {statementsQuery.data?.map((stmt) => (
+                    <tr key={stmt.id}>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{stmt.id}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}>
+                        {stmt.accountId}
+                      </td>
+                      <td>{stmt.statementDate}</td>
+                      <td className="num-cell">{formatMoney(stmt.openingBalance, stmt.currency)}</td>
+                      <td className="num-cell">{formatMoney(stmt.closingBalance, stmt.currency)}</td>
+                      <td>{stmt.lineCount}</td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            stmt.status === "reconciled" ? "badge-mint" : "badge-amber"
+                          }`}
+                        >
+                          {stmt.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          style={{ padding: "4px 10px", fontSize: "11px" }}
+                          onClick={() => alert(`Reviewing statement ${stmt.id} matching lines.`)}
+                        >
+                          Review lines
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          APPROVALS INBOX SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Approvals" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Maker-checker approval inbox</h2>
+                <span className="header-context">
+                  Dual-control governance. Financial actions require authorized checker confirmation.
+                </span>
+              </div>
+            </div>
+
+            {approvalsQuery.data && approvalsQuery.data.length > 0 ? (
+              <div className="treasury-table-wrapper">
+                <table className="treasury-table">
+                  <thead>
+                    <tr>
+                      <th>Action type</th>
+                      <th>Entity</th>
+                      <th>Maker</th>
+                      <th>Payload details</th>
+                      <th>Status</th>
+                      <th>Expires</th>
+                      <th>Decisions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {approvalsQuery.data.map((appr) => {
+                      const isPending = appr.status === "pending";
+                      return (
+                        <tr key={appr.id}>
+                          <td style={{ fontWeight: 600 }}>{appr.actionType}</td>
+                          <td>{appr.entityId}</td>
+                          <td style={{ fontFamily: "var(--font-mono)", fontSize: "11px" }}>
+                            {appr.makerId}
+                          </td>
+                          <td>
+                            <pre
+                              style={{
+                                fontSize: "11px",
+                                fontFamily: "var(--font-mono)",
+                                background: "var(--mineral)",
+                                padding: "4px 8px",
+                                borderRadius: "4px",
+                                margin: 0,
+                              }}
+                            >
+                              {JSON.stringify(appr.payloadSummary, null, 1)}
+                            </pre>
+                          </td>
+                          <td>
+                            <span
+                              className={`badge ${
+                                appr.status === "approved"
+                                  ? "badge-mint"
+                                  : appr.status === "rejected"
+                                  ? "badge-coral"
+                                  : "badge-amber"
+                              }`}
+                            >
+                              {appr.status}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                            {new Date(appr.expiresAt).toLocaleDateString()}
+                          </td>
+                          <td>
+                            {isPending ? (
+                              <div style={{ display: "flex", gap: "6px" }}>
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  style={{ padding: "5px 10px", fontSize: "11px" }}
+                                  onClick={async () => {
+                                    try {
+                                      await api(`/v1/approvals/${appr.id}/decisions`, {
+                                        method: "POST",
+                                        body: JSON.stringify({
+                                          decision: "approved",
+                                          notes: "Approved via dual control review",
+                                        }),
+                                      });
+                                      queryClient.invalidateQueries({ queryKey: ["approvals"] });
+                                    } catch (err: any) {
+                                      alert(err.message);
+                                    }
+                                  }}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-secondary"
+                                  style={{ padding: "5px 10px", fontSize: "11px", color: "var(--coral)" }}
+                                  onClick={async () => {
+                                    try {
+                                      await api(`/v1/approvals/${appr.id}/decisions`, {
+                                        method: "POST",
+                                        body: JSON.stringify({
+                                          decision: "rejected",
+                                          notes: "Rejected by checker",
+                                        }),
+                                      });
+                                      queryClient.invalidateQueries({ queryKey: ["approvals"] });
+                                    } catch (err: any) {
+                                      alert(err.message);
+                                    }
+                                  }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                                Finalized
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="empty-state-box">
+                <CheckCircle2 size={32} color="var(--mint)" />
+                <p>No pending approvals. All maker requests have been decided.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          COLLECTIONS & SETTLEMENTS SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Collections & settlements" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Payment gateway collections & payouts</h2>
+                <span className="header-context">
+                  Normalized provider tracking (Stripe, Telr, Amazon Payment Services) and bank payout matching.
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "20px" }}>
+              <div style={{ padding: "16px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontWeight: 700, fontSize: "14px" }}>Stripe Treasury</div>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Merchant: acct_stripe_uae_01 (Test mode)
+                </div>
+                <div style={{ marginTop: "12px", fontSize: "13px" }}>
+                  Status: <span className="badge badge-mint">Active</span>
+                </div>
+              </div>
+              <div style={{ padding: "16px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontWeight: 700, fontSize: "14px" }}>Telr Gateway</div>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Merchant: telr_uae_mcht_99 (Connected)
+                </div>
+                <div style={{ marginTop: "12px", fontSize: "13px" }}>
+                  Status: <span className="badge badge-mint">Active</span>
+                </div>
+              </div>
+              <div style={{ padding: "16px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontWeight: 700, fontSize: "14px" }}>Amazon Payment Services</div>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Merchant: aps_enterprise_01 (Standby)
+                </div>
+                <div style={{ marginTop: "12px", fontSize: "13px" }}>
+                  Status: <span className="badge badge-neutral">Standby</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="treasury-table-wrapper">
+              <table className="treasury-table">
+                <thead>
+                  <tr>
+                    <th>Provider</th>
+                    <th>Merchant account</th>
+                    <th>Gross</th>
+                    <th>Fee</th>
+                    <th>Net settlement</th>
+                    <th>Settlement currency</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {collectionsQuery.data?.map((col) => (
+                    <tr key={col.id}>
+                      <td style={{ fontWeight: 600, textTransform: "capitalize" }}>{col.provider}</td>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{col.merchantAccountId}</td>
+                      <td className="num-cell">{formatMoney(col.grossAmount, col.originalCurrency)}</td>
+                      <td className="num-cell" style={{ color: "var(--coral)" }}>
+                        {formatMoney(col.feeAmount, col.originalCurrency)}
+                      </td>
+                      <td className="num-cell" style={{ color: "var(--mint)" }}>
+                        {formatMoney(col.netSettlementAmount, col.settlementCurrency)}
+                      </td>
+                      <td>{col.settlementCurrency}</td>
+                      <td>
+                        <span className="badge badge-mint">{col.normalizedStatus}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          OUTBOUND PAYMENTS SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Outbound payments" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Outbound payment requests</h2>
+                <span className="header-context">
+                  Controlled corporate disbursements with maker-checker approvals and beneficiary validation.
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setShowNewPaymentModal(true)}
+              >
+                <Plus size={15} />
+                <span>New payment request</span>
+              </button>
+            </div>
+
+            <div className="treasury-table-wrapper">
+              <table className="treasury-table">
+                <thead>
+                  <tr>
+                    <th>Beneficiary</th>
+                    <th>IBAN</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                    <th>Maker</th>
+                    <th>Approval status</th>
+                    <th>Execution status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paymentsQuery.data?.map((pmt) => (
+                    <tr key={pmt.id}>
+                      <td style={{ fontWeight: 600 }}>{pmt.beneficiaryName}</td>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{pmt.beneficiaryIban}</td>
+                      <td className="num-cell">{formatMoney(pmt.amount, pmt.currency)}</td>
+                      <td>{pmt.currency}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", fontSize: "11px" }}>{pmt.makerId}</td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            pmt.approvalStatus === "approved"
+                              ? "badge-mint"
+                              : pmt.approvalStatus === "pending"
+                              ? "badge-amber"
+                              : "badge-coral"
+                          }`}
+                        >
+                          {pmt.approvalStatus}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="badge badge-neutral">{pmt.executionStatus}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          ESCROW MONITORING SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Escrow monitoring" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Escrow & restricted project accounts</h2>
+                <span className="header-context">
+                  Project account balances, legal restrictions, and maker-checker release governance.
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setShowNewEscrowModal(true)}
+              >
+                <Plus size={15} />
+                <span>Request escrow release</span>
+              </button>
+            </div>
+
+            <div className="treasury-table-wrapper">
+              <table className="treasury-table">
+                <thead>
+                  <tr>
+                    <th>Project name</th>
+                    <th>Escrow account</th>
+                    <th>Currency</th>
+                    <th style={{ textAlign: "right" }}>Reported balance</th>
+                    <th style={{ textAlign: "right" }}>Restricted amount</th>
+                    <th style={{ textAlign: "right" }}>Available for release</th>
+                    <th>As of</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {escrowAccountsQuery.data?.map((esc) => (
+                    <tr key={esc.id}>
+                      <td style={{ fontWeight: 600 }}>{esc.projectName}</td>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{esc.bankAccountId}</td>
+                      <td>{esc.currency}</td>
+                      <td className="num-cell">{formatMoney(esc.reportedBalance, esc.currency)}</td>
+                      <td className="num-cell" style={{ color: "var(--coral)" }}>
+                        {formatMoney(esc.restrictedAmount, esc.currency)}
+                      </td>
+                      <td className="num-cell" style={{ color: "var(--mint)" }}>
+                        {formatMoney(esc.availableForRelease, esc.currency)}
+                      </td>
+                      <td style={{ fontSize: "11px", color: "var(--text-muted)" }}>{esc.asOf}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          REPORTS SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Reports" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Treasury reports & exports</h2>
+                <span className="header-context">
+                  Audited reports with exact timestamps, source lineage, and control totals.
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+              <div
+                style={{
+                  padding: "20px",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-subtle)",
+                  backgroundColor: "var(--mineral)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <FileSpreadsheet size={24} color="#315B58" />
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700 }}>Cash Position Report</h3>
+                  <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" }}>
+                    Consolidated bank balances, restricted cash segregations, and net operating liquidity.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ alignSelf: "flex-start", marginTop: "auto" }}
+                  onClick={() => downloadCsv("/v1/reports/cash-position.csv", "cash-position-report.csv")}
+                >
+                  <Download size={15} />
+                  <span>Download CSV</span>
+                </button>
+              </div>
+
+              <div
+                style={{
+                  padding: "20px",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-subtle)",
+                  backgroundColor: "var(--mineral)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <AlertTriangle size={24} color="#D97706" />
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700 }}>Reconciliation Exceptions Report</h3>
+                  <p style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" }}>
+                    Unmatched statement lines, timing differences, and settlement variance logs.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ alignSelf: "flex-start", marginTop: "auto" }}
+                  onClick={() => downloadCsv("/v1/reports/exceptions.csv", "reconciliation-exceptions.csv")}
+                >
+                  <Download size={15} />
+                  <span>Download CSV</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          AGENT ACTIVITY SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Agent activity" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Autonomous agent run logs & evidence</h2>
+                <span className="header-context">
+                  TA-01 Reconciler run history, proposed matches, and supporting evidence lineage.
+                </span>
+              </div>
+            </div>
+
+            <div className="treasury-table-wrapper">
+              <table className="treasury-table">
+                <thead>
+                  <tr>
+                    <th>Run ID</th>
+                    <th>Agent</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Proposals generated</th>
+                    <th>Evidence items</th>
+                    <th>Started at</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {agentRunsQuery.data?.map((run) => (
+                    <tr key={run.id}>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{run.id}</td>
+                      <td style={{ fontWeight: 600 }}>{run.agentId}</td>
+                      <td>{run.runType}</td>
+                      <td>
+                        <span className="badge badge-mint">{run.status}</span>
+                      </td>
+                      <td>{run.proposalCount}</td>
+                      <td>{run.evidenceCount} items</td>
+                      <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                        {new Date(run.startedAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          CONNECTIONS SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Connections" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Treasury system & banking connectors</h2>
+                <span className="header-context">
+                  Integration gateways for TMS, Host-to-Host banking feeds, and payment service providers.
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+              {connectorsQuery.data?.map((conn) => (
+                <div
+                  key={conn.id}
+                  style={{
+                    padding: "20px",
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--border-subtle)",
+                    backgroundColor: "var(--mineral)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <h3 style={{ fontSize: "16px", fontWeight: 700 }}>{conn.name}</h3>
+                    <span
+                      className={`badge ${
+                        conn.status === "connected"
+                          ? "badge-mint"
+                          : conn.status === "test_mode"
+                          ? "badge-amber"
+                          : "badge-neutral"
+                      }`}
+                    >
+                      {conn.status.replace("_", " ")}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                    Type: {conn.type.toUpperCase()}
+                  </p>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                    Last sync: {conn.lastSyncAt ? new Date(conn.lastSyncAt).toLocaleString() : "Never"}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ marginTop: "auto", fontSize: "12px" }}
+                    onClick={() => alert(`Connector ${conn.name} status: ${conn.status}`)}
+                  >
+                    Configure connector
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          SETTINGS SCREEN
+          -------------------------------------------------------------------- */}
+      {page === "Settings" && (
+        <div className="overview-left">
+          <div className="overview-card">
+            <div className="overview-card-header">
+              <div>
+                <h2>Workspace settings & security</h2>
+                <span className="header-context">
+                  Active tenant metadata, token expiration safeguards, and role-based policies.
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ padding: "16px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontWeight: 600, fontSize: "14px" }}>Tenant Membership</div>
+                <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" }}>
+                  Tenant ID: <code style={{ fontFamily: "var(--font-mono)" }}>tenant-northstar-group</code>
+                </div>
+                <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                  Active User: <code style={{ fontFamily: "var(--font-mono)" }}>admin@treasury.local</code> (Role: Platform Admin)
+                </div>
+              </div>
+
+              <div style={{ padding: "16px", background: "var(--mineral)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontWeight: 600, fontSize: "14px" }}>Session & Token Security</div>
+                <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "4px" }}>
+                  Token Lifetime: 15 minutes (auto-refreshes on user activity)
+                </div>
+                <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                  Single-use OTP Challenge: Enforced
+                </div>
+                <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                  Production Fail-Closed Controls: Active
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          MODAL: STATEMENT IMPORT
+          -------------------------------------------------------------------- */}
+      {showImportModal && (
+        <div className="modal-overlay" onClick={() => setShowImportModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Import Bank Statement</h2>
+              <button
+                type="button"
+                className="icon-action-btn"
+                onClick={() => setShowImportModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                try {
+                  await api("/v1/statements/import", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      entityId: formData.get("entityId"),
+                      accountId: formData.get("accountId"),
+                      statementDate: formData.get("statementDate"),
+                      currency: formData.get("currency"),
+                      openingBalance: formData.get("openingBalance"),
+                      closingBalance: formData.get("closingBalance"),
+                      lines: [
+                        {
+                          id: `line-${Date.now()}-1`,
+                          bookingDate: formData.get("statementDate"),
+                          valueDate: formData.get("statementDate"),
+                          amount: "25000.00",
+                          currency: formData.get("currency"),
+                          creditDebit: "CR",
+                          remittanceInfo: "Customer Payment INV-9021",
+                          reference: `REF-${Date.now()}`,
+                        },
+                      ],
+                    }),
+                  });
+                  queryClient.invalidateQueries({ queryKey: ["statements"] });
+                  queryClient.invalidateQueries({ queryKey: ["cash-positions"] });
+                  setShowImportModal(false);
+                } catch (err: any) {
+                  alert(err.message);
+                }
+              }}
+            >
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Legal Entity</label>
+                  <select name="entityId" className="filter-select" required>
+                    <option value="le-northstar-ae">Northstar UAE Ltd</option>
+                    <option value="le-northstar-difc">Northstar Treasury DIFC</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Bank Account Number / IBAN</label>
+                  <input
+                    name="accountId"
+                    type="text"
+                    required
+                    defaultValue="AE0303300000001234567"
+                    className="filter-select"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Statement Date</label>
+                  <input
+                    name="statementDate"
+                    type="date"
+                    required
+                    defaultValue="2026-09-10"
+                    className="filter-select"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Currency</label>
+                  <select name="currency" className="filter-select" required>
+                    <option value="AED">AED</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div className="form-group">
+                    <label>Opening Balance</label>
+                    <input
+                      name="openingBalance"
+                      type="text"
+                      required
+                      defaultValue="15000000.00"
+                      className="filter-select"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Closing Balance</label>
+                    <input
+                      name="closingBalance"
+                      type="text"
+                      required
+                      defaultValue="15025000.00"
+                      className="filter-select"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowImportModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Import Statement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          MODAL: METRIC DEFINITIONS & FORMULAS
+          -------------------------------------------------------------------- */}
+      {showMetricModal && (
+        <div className="modal-overlay" onClick={() => setShowMetricModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Treasury Metric Definitions</h2>
+              <button
+                type="button"
+                className="icon-action-btn"
+                onClick={() => setShowMetricModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="calc-formula-box">
+                <span className="calc-formula-tag">Available Cash Formula</span>
+                <span className="calc-formula-text">Available Cash = Bank Cash — Restricted Cash — Reservations</span>
+                <span className="calc-formula-note">
+                  Operating cash ready for disbursement. Restricted funds (e.g. escrow accounts or legal holds)
+                  are subtracted to prevent double-counting.
+                </span>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "6px" }}>Bank Cash</h4>
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                  Total verified bank-reported balances across operating and escrow accounts as of the latest statement timestamp.
+                </p>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "6px" }}>Restricted Cash</h4>
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                  Balances segregated under legal, regulatory, or escrow agreements (e.g., project escrow accounts).
+                </p>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: "14px", fontWeight: 700, marginBottom: "6px" }}>Undrawn Facilities</h4>
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                  Committed credit and overdraft headroom. Tracked distinctly from operating cash.
+                </p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setShowMetricModal(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          MODAL: NEW OUTBOUND PAYMENT REQUEST
+          -------------------------------------------------------------------- */}
+      {showNewPaymentModal && (
+        <div className="modal-overlay" onClick={() => setShowNewPaymentModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Create Outbound Payment Request</h2>
+              <button
+                type="button"
+                className="icon-action-btn"
+                onClick={() => setShowNewPaymentModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                try {
+                  await api("/v1/payments/outbound", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      entityId: formData.get("entityId"),
+                      bankAccountId: formData.get("bankAccountId"),
+                      beneficiaryName: formData.get("beneficiaryName"),
+                      beneficiaryIban: formData.get("beneficiaryIban"),
+                      amount: formData.get("amount"),
+                      currency: formData.get("currency"),
+                      reason: formData.get("reason"),
+                    }),
+                  });
+                  queryClient.invalidateQueries({ queryKey: ["outbound-payments"] });
+                  queryClient.invalidateQueries({ queryKey: ["approvals"] });
+                  setShowNewPaymentModal(false);
+                } catch (err: any) {
+                  alert(err.message);
+                }
+              }}
+            >
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Legal Entity</label>
+                  <select name="entityId" className="filter-select" required>
+                    <option value="le-northstar-ae">Northstar UAE Ltd</option>
+                    <option value="le-northstar-difc">Northstar Treasury DIFC</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Source Bank Account</label>
+                  <input
+                    name="bankAccountId"
+                    type="text"
+                    required
+                    defaultValue="ba-enbd-ae-01"
+                    className="filter-select"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Beneficiary Name</label>
+                  <input
+                    name="beneficiaryName"
+                    type="text"
+                    required
+                    placeholder="e.g. Al Futtaim Engineering LLC"
+                    className="filter-select"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Beneficiary IBAN</label>
+                  <input
+                    name="beneficiaryIban"
+                    type="text"
+                    required
+                    placeholder="AE..."
+                    className="filter-select"
+                  />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div className="form-group">
+                    <label>Amount</label>
+                    <input
+                      name="amount"
+                      type="text"
+                      required
+                      placeholder="50000.00"
+                      className="filter-select"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Currency</label>
+                    <select name="currency" className="filter-select" required>
+                      <option value="AED">AED</option>
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Reason / Purpose of Payment</label>
+                  <input
+                    name="reason"
+                    type="text"
+                    required
+                    placeholder="Supplier invoice payment"
+                    className="filter-select"
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowNewPaymentModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Submit for Approval
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------
+          MODAL: NEW ESCROW RELEASE REQUEST
+          -------------------------------------------------------------------- */}
+      {showNewEscrowModal && (
+        <div className="modal-overlay" onClick={() => setShowNewEscrowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Request Escrow Disbursement</h2>
+              <button
+                type="button"
+                className="icon-action-btn"
+                onClick={() => setShowNewEscrowModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                try {
+                  await api("/v1/escrow/releases", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      entityId: formData.get("entityId"),
+                      escrowAccountId: formData.get("escrowAccountId"),
+                      requestedAmount: formData.get("requestedAmount"),
+                      currency: formData.get("currency"),
+                      reason: formData.get("reason"),
+                    }),
+                  });
+                  queryClient.invalidateQueries({ queryKey: ["escrow-releases"] });
+                  queryClient.invalidateQueries({ queryKey: ["approvals"] });
+                  setShowNewEscrowModal(false);
+                } catch (err: any) {
+                  alert(err.message);
+                }
+              }}
+            >
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Legal Entity</label>
+                  <select name="entityId" className="filter-select" required>
+                    <option value="le-northstar-ae">Northstar UAE Ltd</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Escrow Account</label>
+                  <select name="escrowAccountId" className="filter-select" required>
+                    <option value="escrow-dxb-01">Dubai Marina Tower Escrow (escrow-dxb-01)</option>
+                  </select>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div className="form-group">
+                    <label>Requested Amount</label>
+                    <input
+                      name="requestedAmount"
+                      type="text"
+                      required
+                      placeholder="100000.00"
+                      className="filter-select"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Currency</label>
+                    <select name="currency" className="filter-select" required>
+                      <option value="AED">AED</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Milestone / Justification</label>
+                  <input
+                    name="reason"
+                    type="text"
+                    required
+                    placeholder="Milestone 4 Completion Certificate verified by engineering consultant"
+                    className="filter-select"
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => setShowNewEscrowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary">
+                  Submit Release Request
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </ObsidianDashboard>
   );
 }
