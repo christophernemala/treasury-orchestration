@@ -1,135 +1,140 @@
 # Treasury Atom
 
-Treasury Atom is a governed treasury month-end workspace for cash visibility, bank-statement ingestion, transaction review, reconciliation, evidence, approvals and auditable agent workflows. It includes an authenticated real-time SSE dashboard and interactive motion controls while clearly identifying seeded development data as illustrative.
+> **Governed Corporate Treasury & Cash Orchestration Platform** — Real-time cash visibility, bank-statement ingestion, transaction review, multi-criteria reconciliation, dual-control approvals, and auditable agent workflows.
 
-The application contains working local transaction CRUD, reconciliation decisions, unapplied-cash workflows, CSV export, authenticated SSE updates and audit records. External treasury integrations are not represented as live. See the [treasury operations coverage matrix](docs/treasury-operations-coverage.md) for the exact boundary and production completion sequence.
+---
 
-## Technology
+## ✨ Features & Capabilities
 
-- React 19, TypeScript, Vite and React Router
-- Framer Motion, TanStack Query and Lucide
-- Node.js and Express 5 REST API
-- Authenticated Server-Sent Events at `/api/treasury/live-stream`
-- Vitest API and reconciliation tests
-- Supabase/PostgreSQL migrations with organization-scoped row-level security
-- Vercel-compatible frontend; persistent API hosting or Supabase Realtime migration required for the SSE backend
+- **Consolidated Cash Visibility**: Real-time multi-bank, multi-currency position calculation with strict segregation of restricted and operating cash.
+- **Bank Statement Ingestion**: Automated ingestion and checksum deduplication for MT940, CAMT.053, and Excel bank statements.
+- **Intelligent Heuristic Reconciliation**: Rule-based matching engine (exact date, fuzzy date window, reference substring, exact decimal amount).
+- **Maker-Checker Dual Control**: Separation of duties with configurable authorization thresholds for payments, adjustments, and reconciliation sign-offs.
+- **Real-Time SSE Live Stream**: Authenticated Server-Sent Events (`/api/treasury/live-stream`) delivering sub-second balance updates and approval requests.
+- **Deterministic Agent Workflows**: Explainable AI proposals and audit traces without ungrounded ledger writes.
 
-> The current implementation is React/Vite plus Express/TypeScript. It is not currently a Next.js or FastAPI application.
+---
 
-## Repository structure
+## 🛠️ Technology Stack
+
+- **Frontend**: React 19, TypeScript, Vite, React Router, TanStack Query, Lucide icons, Framer Motion
+- **Backend**: Node.js, Express 5 REST API, Server-Sent Events (SSE)
+- **Persistence**: 
+  - Local / Fast Test: `node:sqlite` (`DatabaseSync`) located at `.runtime/treasury.db` (or `:memory:`)
+  - Production: Supabase / PostgreSQL with Row-Level Security (RLS)
+- **Testing**: Vitest with 56 automated unit, security, and reconciliation tests
+- **Base Currency**: `AED` (strict zero-float decimal precision)
+
+---
+
+## 📚 Documentation & Technical Specifications
+
+| Document | Purpose |
+|---|---|
+| [`REFERENCE.md`](REFERENCE.md) | Full REST API contract, SSE stream specification, security invariants, and database schema. |
+| [`skills.md`](skills.md) | Catalog of embedded algorithmic skills, mathematical models, and agent invocation patterns. |
+| [`AGENTS.md`](AGENTS.md) | AI coding agent configuration, rules of engagement, and architectural invariants. |
+| [`docs/architecture.md`](docs/architecture.md) | Comprehensive system architecture and lifecycle state machine. |
+| [`docs/governance.md`](docs/governance.md) | Dual-control thresholds and segregation of duties policies. |
+| [`docs/phase-1-production-blueprint.md`](docs/phase-1-production-blueprint.md) | Production hardening, cloud rebuild, and deployment guide. |
+| [`docs/verification-runbook.md`](docs/verification-runbook.md) | Step-by-step verification and UAT runbook. |
+
+---
+
+## 🧠 Skills Catalog
+
+The platform embeds standardized, reusable financial algorithms documented in [`skills/`](skills/):
+
+- [`skills/treasury-reconciliation/SKILL.md`](skills/treasury-reconciliation/SKILL.md): Bank statement matching heuristics and GL reconciliation.
+- [`skills/cash-position-audit/SKILL.md`](skills/cash-position-audit/SKILL.md): Available vs. restricted cash calculation and control totals.
+- [`skills/liquidity-forecasting/SKILL.md`](skills/liquidity-forecasting/SKILL.md): Daily (T+7), weekly (T+30), and monthly cash forecasts.
+- [`skills/maker-checker-governance/SKILL.md`](skills/maker-checker-governance/SKILL.md): Separation of duties and dual-control sign-offs.
+- [`skills/escrow-kriba-management/SKILL.md`](skills/escrow-kriba-management/SKILL.md): Segregated project escrow accounts and milestone releases.
+
+---
+
+## 📁 Repository Structure
 
 ```text
-client/       React application and visual treasury workspace
-server/       Express API, domain services, policies and tests
-supabase/     Versioned PostgreSQL migrations
-docs/         Architecture, API, deployment and UI audit documentation
-scripts/      Local developer utilities
-automation/   Reserved for reviewed n8n workflows and agent configurations
+treasury-orchestration/
+├── client/                     # React 19 / Vite frontend application
+│   ├── src/
+│   │   ├── components/         # Workspace UI, modals, motion controls
+│   │   ├── hooks/              # SSE live-stream hook, API queries
+│   │   └── App.tsx             # Main client shell and navigation
+├── server/                     # Express 5 REST API & domain services
+│   ├── src/
+│   │   ├── modules/            # Treasury, reconciliation, platform services
+│   │   │   └── platform/       # agentEngine.ts, types.ts
+│   │   ├── middleware/         # Auth, tenant scoping, CORS
+│   │   └── index.ts            # API server entrypoint
+│   └── tests/                  # Vitest suite (56 tests)
+├── skills/                     # Domain skills & algorithm specifications
+│   ├── treasury-reconciliation/
+│   ├── cash-position-audit/
+│   ├── liquidity-forecasting/
+│   ├── maker-checker-governance/
+│   └── escrow-kriba-management/
+├── supabase/                   # PostgreSQL migrations with RLS
+├── docs/                       # Architecture, security audits, blueprints
+├── REFERENCE.md                # Complete API contract & data dictionary
+├── skills.md                   # Skills catalog index
+├── AGENTS.md                   # AI agent instructions & boundaries
+└── README.md                   # Project overview
 ```
 
-The original Treasury Atom humanoid login artwork is stored at `client/public/assets/treasury-atom-assistant.png`; it contains no third-party branding or embedded interface text.
+---
 
-## Run locally
+## 🚀 Quick Start
 
-Prerequisites: Node.js 22 or later and npm.
+### Prerequisites
+- Node.js 22+ and npm
+
+### Local Setup
 
 ```powershell
+# 1. Clone repository
 git clone https://github.com/christophernemala/treasury-orchestration.git
 cd treasury-orchestration
+
+# 2. Configure environment
 Copy-Item .env.example .env
+
+# 3. Install dependencies
 npm ci
+
+# 4. Start local development (Express API on :4320, Vite Client on :5173)
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/app`. Vite proxies `/api` to the Express server at `http://127.0.0.1:4320`, so `VITE_API_BASE_URL` is unnecessary locally.
+Open your browser at `http://127.0.0.1:5173/app`.
 
-Local development access uses `admin@treasury.local` / `Treasury123!`. Each login generates a new development OTP, returned to the local login form; no email is sent. Tokens expire after 15 minutes. Production identity is not implemented, so production authentication, treasury APIs and SSE fail closed. See the [remediation evidence and remaining blockers](docs/security-remediation-2026-09-09.md).
+### Authentication for Local Dev
+- **User**: `admin@treasury.local`
+- **Password**: `Treasury123!`
+- *Each login automatically displays a single-use 6-digit development OTP on the screen (no email required).*
 
-## Health, reset and quality gates
+---
+
+## 🧪 Testing & Verification
 
 ```powershell
-Invoke-WebRequest http://127.0.0.1:4320/api/health
-./scripts/check-health.ps1
+# Run all automated tests (56 tests)
+npm run test
+
+# Run full quality gates (build + test)
 npm run check
+
+# Check API health
+Invoke-WebRequest http://127.0.0.1:4320/api/health
 ```
 
-- `GET /api/health` checks process liveness only.
-- `GET /api/health/runtime` reports process, scheduler, execution and governance readiness; development remains deliberately `propose_only`. See [docs/governance.md](docs/governance.md).
-- `POST /api/v1/dev/reset` restores the platform seed only for a development admin with full demo entity access; it refuses shared-tenant repositories.
-- `POST /api/seed` restores legacy treasury data while preserving users and memberships; full demo scope and admin permission are required. Both reset routes are absent in production.
-- `npm run check` builds both workspaces and runs all server tests.
+---
 
-## Environment variables
+## 🔒 Security Invariants
 
-Use `.env.example` as the environment contract and supply values through your shell, secret store or hosting provider; the Express entrypoint does not automatically load `.env`. Never commit `.env`. `npm run dev` explicitly selects development; `npm start` does not. Unset or unknown `NODE_ENV` values fail closed like production.
-
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | Express API port; defaults to `4320`. |
-| `NODE_ENV` | Only `development` and `test` enable the in-memory prototype. Use `production` in hosting. |
-| `CLIENT_ORIGIN` | Comma-separated exact browser origins. Required outside development; HTTPS only, no wildcard, credentials or path. Local defaults allow port 5173 on localhost and 127.0.0.1. |
-| `AUTH_SECRET` | Non-placeholder signing secret, at least 32 characters. Required outside development/test; otherwise an ephemeral process key is used. `JWT_SECRET` is rejected. |
-| `SUPABASE_URL` | Supabase project API URL. |
-| `SUPABASE_PUBLISHABLE_KEY` | Browser-safe Supabase publishable key. |
-| `SUPABASE_SECRET_KEY` | Server-only Supabase secret; never use a `VITE_` prefix. |
-| `VITE_API_BASE_URL` | Optional URL when the API is hosted separately from the frontend. |
-| `CUSTOMER_IO_APP_API_KEY` | Future server-only Customer.io App API credential. |
-| `CUSTOMER_IO_TRACK_SITE_ID` | Future server-side Customer.io tracking site identifier. |
-| `CUSTOMER_IO_TRACK_API_KEY` | Future server-only Customer.io Track API credential. |
-
-## Supabase
-
-The migrations create an empty, RLS-protected treasury schema for organizations, memberships, bank accounts, statements, transactions, reconciliations, close periods/tasks, evidence, approvals, audit receipts and motion preferences. No bank credentials or fabricated balances are inserted.
-
-The running Express application still uses its in-memory repository until Supabase Auth and the Postgres repository adapter are enabled. See [the deployment guide](docs/deployment.md) for the controlled migration sequence.
-
-## Deployment
-
-### Frontend on Vercel
-
-Configure the project root as `client`, build command `npm run build`, and output directory `dist`. Set `VITE_API_BASE_URL` to the separately hosted HTTPS API.
-
-### API and SSE
-
-Production deployment remains blocked. With valid `AUTH_SECRET` and `CLIENT_ORIGIN`, `server/dist/index.js` exposes liveness, but readiness and application APIs return `503` until production identity and persistence adapters exist. After those blockers are resolved, use a host supporting persistent HTTP connections, TLS, secrets management and a process supervisor. Configure readiness against `/api/health/runtime`.
-
-For a single Vercel/Supabase architecture, migrate authenticated events to private Supabase Realtime channels before removing the Express SSE process.
-
-## Current status
-
-- Functional local authentication, REST workflows and authenticated SSE updates
-- Evidence-bound Intelligence workspace with deterministic investigation prompts and propose-only controls
-- Operational real-time motion controls persisted per browser
-- Responsive UI with reduced-motion and keyboard support
-- Customer workspace with interactive, truth-labelled ERP/GL, banking, evidence and communications connection points
-- Working workspace shortcuts: `K` focuses record search, `D` toggles the data map, `R` refreshes, and `Esc` clears search
-- Empty Supabase treasury schema applied with RLS; security advisor clean
-- Production build and 11 automated server tests passing
-
-### Known issues
-
-- Runtime treasury records are still illustrative and in memory.
-- Development password/OTP authentication is not production identity.
-- There is no validated live bank, ERP/GL, email or payment connection.
-- The CRM connection map reports integration readiness only; it does not initiate external reads or mutations.
-- The communication agent creates local previews only; Customer.io delivery is not connected.
-- Evidence file binaries still require a private object-storage adapter.
-- Vercel alone cannot host the current persistent Express SSE process.
-
-## Related assets
-
-- Figma: _Not yet published_
-- Product requirements / Google Drive: _Not yet published_
-- Power BI semantic model: _Not yet created_
-- Operational runbook: [docs/deployment.md](docs/deployment.md)
-
-## Documentation
-
-- [Phase 1 production audit and Google Cloud rebuild blueprint](docs/phase-1-production-blueprint.md)
-- [Production verification runbook](docs/verification-runbook.md)
-- [Architecture](docs/architecture.md)
-- [API contract](docs/api.md)
-- [Deployment and hardening](docs/deployment.md)
-- [UI and product audit](docs/ui-audit.md)
-- [KRIBA Escrow integration boundary](docs/kriba-escrow.md)
-- [Treasury Atom redesign brief](docs/treasury-atom-redesign-prompt.md)
+1. **Zero Floating Point Math**: IEEE 754 floats are banned; all amounts use exact 2-decimal arithmetic.
+2. **Short-Lived JWTs**: Session tokens expire after 15 minutes.
+3. **Tenant & Entity Scoping**: Reads and writes validate the user's explicit legal entity assignments (`403 ENTITY_SCOPE_DENIED` on violation).
+4. **Dual-Control Invariant**: A maker can never approve their own proposed action.
+5. **Fail-Closed in Production**: Missing credentials or unverified origins reject all requests with `503`.

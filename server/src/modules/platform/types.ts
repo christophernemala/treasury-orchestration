@@ -211,6 +211,7 @@ export interface CashPosition {
     sourceTimestamp: string;
   };
   sourcesCount: number;
+  accounts?: any[];
 }
 
 export interface Approval {
