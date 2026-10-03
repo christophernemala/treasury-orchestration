@@ -1,4 +1,4 @@
-import React, { FormEvent, useState, useMemo } from "react";
+import React, { FormEvent, Suspense, lazy, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -35,7 +35,6 @@ import { useLiveTreasury } from "./hooks/useLiveTreasury";
 import { ObsidianDashboard } from "./components/ObsidianDashboard";
 import type { PageName } from "./components/ObsidianDashboard";
 import { TreasuryAtomLogo } from "./components/TreasuryAtomLogo";
-import { AtomIllustration } from "./components/AtomIllustration";
 import { ReconciliationWorkspace } from "./components/ReconciliationWorkspace";
 import { formatMoney, sumMoney } from "./utils/money";
 import type {
@@ -50,6 +49,12 @@ import type {
   ConnectorStatus,
   AgentRun,
 } from "./types";
+
+const AtomIllustration = lazy(() =>
+  import("./components/AtomIllustration").then(({ AtomIllustration }) => ({
+    default: AtomIllustration,
+  })),
+);
 
 // --------------------------------------------------------------------------
 // LOGIN COMPONENT
@@ -97,7 +102,16 @@ function Login({ onDone }: { onDone: () => void }) {
     <div className="login-viewport">
       {/* 3D Glowing Atom Stage on Left */}
       <div className="login-stage">
-        <AtomIllustration />
+        <Suspense
+          fallback={
+            <div className="atom-illustration-fallback" role="status" aria-live="polite">
+              <TreasuryAtomLogo size={44} showText={false} />
+              <span>Loading secure workspace…</span>
+            </div>
+          }
+        >
+          <AtomIllustration />
+        </Suspense>
       </div>
 
       {/* Login Form Panel on Right */}
