@@ -54,7 +54,7 @@ export const NAV_GROUPS: NavGroupConfig[] = [
     items: [
       { name: "Overview", label: "Overview", icon: LayoutDashboard },
       { name: "Cash & liquidity", label: "Cash & liquidity", icon: TrendingUp },
-      { name: "Reconciliation", label: "Reconciliation", icon: ScanSearch },
+      { name: "Reconciliation", label: "Bank imports", icon: ScanSearch },
       { name: "Approvals", label: "Approvals", icon: BadgeCheck },
     ],
   },
@@ -112,7 +112,7 @@ export function ObsidianDashboard({
 
   return (
     <div className="app-shell">
-      {/* Dark Graphite Sidebar */}
+      {/* VibeUI-inspired light application rail */}
       <aside className={`sidebar ${mobileMenuOpen ? "mobile-open" : ""}`}>
         {/* Brand Header */}
         <div className="sidebar-brand-wrapper">
@@ -122,10 +122,10 @@ export function ObsidianDashboard({
         {/* Workspace Selector Dropdown */}
         <button className="workspace-picker" type="button" aria-label="Current workspace">
           <div className="workspace-picker-inner">
-            <Building2 size={16} color="#C3A77B" />
+            <Building2 size={16} />
             <span>Treasury workspace</span>
           </div>
-          <ChevronDown size={14} color="#8E9CA8" />
+          <ChevronDown size={14} />
         </button>
 
         {/* Grouped Navigation */}
@@ -176,7 +176,7 @@ export function ObsidianDashboard({
           <button
             type="button"
             className="nav-link-btn"
-            style={{ color: "#EF7B72" }}
+            style={{ color: "var(--coral)" }}
             onClick={onLogout}
           >
             <LogOut size={16} />
@@ -226,8 +226,8 @@ export function ObsidianDashboard({
               tabIndex={0}
               role="button"
             >
-              <div className="user-avatar">JD</div>
-              <span className="user-name">John Doe</span>
+              <div className="user-avatar">AU</div>
+              <span className="user-name">Authorized user</span>
               <ChevronDown size={14} color="#7E8B9B" />
             </div>
           </div>
