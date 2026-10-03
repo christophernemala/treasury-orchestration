@@ -36,6 +36,8 @@ import { ObsidianDashboard } from "./components/ObsidianDashboard";
 import type { PageName } from "./components/ObsidianDashboard";
 import { TreasuryAtomLogo } from "./components/TreasuryAtomLogo";
 import { AtomIllustration } from "./components/AtomIllustration";
+import { ReconciliationWorkspace } from "./components/ReconciliationWorkspace";
+import { formatMoney, sumMoney } from "./utils/money";
 import type {
   CashPosition,
   Statement,
@@ -48,16 +50,6 @@ import type {
   ConnectorStatus,
   AgentRun,
 } from "./types";
-
-// Exact currency formatting
-function formatMoney(amountStr: string | number, currency = "AED"): string {
-  const num = typeof amountStr === "string" ? parseFloat(amountStr) : amountStr;
-  if (isNaN(num)) return `${currency} 0.00`;
-  return `${currency} ${num.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 // --------------------------------------------------------------------------
 // LOGIN COMPONENT
@@ -443,10 +435,11 @@ export function App() {
               </div>
               <div className="kpi-value">
                 {formatMoney(
-                  statementsQuery.data?.reduce(
-                    (acc, s) => acc + (s.status === "unreconciled" ? parseFloat(s.closingBalance) : 0),
-                    0
-                  ) ?? 0,
+                  sumMoney(
+                    statementsQuery.data
+                      ?.filter((statement) => statement.status === "unreconciled")
+                      .map((statement) => statement.closingBalance) ?? [],
+                  ),
                   selectedCurrency
                 )}
               </div>
@@ -777,76 +770,11 @@ export function App() {
           RECONCILIATION SCREEN
           -------------------------------------------------------------------- */}
       {page === "Reconciliation" && (
-        <div className="overview-left">
-          <div className="overview-card">
-            <div className="overview-card-header">
-              <div>
-                <h2>Statement reconciliation workspace</h2>
-                <span className="header-context">
-                  CAMT.053 / MT940 statement match proposals and exceptions review.
-                </span>
-              </div>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => setShowImportModal(true)}
-              >
-                <Upload size={15} />
-                <span>Import statement</span>
-              </button>
-            </div>
-
-            <div className="treasury-table-wrapper">
-              <table className="treasury-table">
-                <thead>
-                  <tr>
-                    <th>Statement ID</th>
-                    <th>Account</th>
-                    <th>Date</th>
-                    <th>Opening</th>
-                    <th>Closing</th>
-                    <th>Lines</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {statementsQuery.data?.map((stmt) => (
-                    <tr key={stmt.id}>
-                      <td style={{ fontFamily: "var(--font-mono)" }}>{stmt.id}</td>
-                      <td style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}>
-                        {stmt.accountId}
-                      </td>
-                      <td>{stmt.statementDate}</td>
-                      <td className="num-cell">{formatMoney(stmt.openingBalance, stmt.currency)}</td>
-                      <td className="num-cell">{formatMoney(stmt.closingBalance, stmt.currency)}</td>
-                      <td>{stmt.lineCount}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            stmt.status === "reconciled" ? "badge-mint" : "badge-amber"
-                          }`}
-                        >
-                          {stmt.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          style={{ padding: "4px 10px", fontSize: "11px" }}
-                          onClick={() => alert(`Reviewing statement ${stmt.id} matching lines.`)}
-                        >
-                          Review lines
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <ReconciliationWorkspace
+          statements={statementsQuery.data ?? []}
+          loading={statementsQuery.isLoading}
+          onImport={() => setShowImportModal(true)}
+        />
       )}
 
       {/* --------------------------------------------------------------------
