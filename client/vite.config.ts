@@ -15,7 +15,6 @@ export default defineConfig({
           react: ["react", "react-dom", "react-router-dom"],
           query: ["@tanstack/react-query", "@microsoft/fetch-event-source"],
           motion: ["framer-motion"],
-          spatial: ["three", "@react-three/fiber", "@react-three/drei"],
         },
       },
     },
