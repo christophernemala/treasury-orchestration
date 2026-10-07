@@ -93,6 +93,7 @@ interface ObsidianDashboardProps {
   children: ReactNode;
 }
 
+/** Render the workspace shell with navigation, connection status and caller-provided content. */
 export function ObsidianDashboard({
   page,
   onPageChange,

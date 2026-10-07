@@ -59,6 +59,7 @@ const AtomIllustration = lazy(() =>
 // --------------------------------------------------------------------------
 // LOGIN COMPONENT
 // --------------------------------------------------------------------------
+/** Render password and OTP sign-in, calling onDone after storing the verified token. */
 function Login({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState<"login" | "otp">("login");
   const [email, setEmail] = useState(import.meta.env.DEV ? "admin@treasury.local" : "");
@@ -237,6 +238,7 @@ function Login({ onDone }: { onDone: () => void }) {
 // --------------------------------------------------------------------------
 // MAIN APPLICATION
 // --------------------------------------------------------------------------
+/** Render sign-in or the treasury workspace, coordinating API data, live updates and actions. */
 export function App() {
   const [token, setTokenState] = useState<string | null>(() => getToken());
   const [page, setPage] = useState<PageName>("Overview");

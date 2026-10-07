@@ -21,14 +21,20 @@ interface ReconciliationWorkspaceProps {
 
 type BatchFilter = "all" | "review" | "reconciled";
 
+/** Return whether a batch status is reconciled, ignoring letter case. */
 function isReconciled(status: string): boolean {
   return status.toLowerCase() === "reconciled";
 }
 
+/** Replace status underscores with spaces for display, preserving letter case. */
 function readableStatus(status: string): string {
   return status.replaceAll("_", " ");
 }
 
+/**
+ * Render searchable statement batches and read-only source evidence from supplied data.
+ * Keep filtering and selection local and delegate import requests to onImport.
+ */
 export function ReconciliationWorkspace({
   statements,
   loading,
