@@ -112,3 +112,35 @@ SYSTEM
 - `Escape` closes any modal, flyout drawer, or popover.
 - Skip navigation link (`Skip to workspace`) provided on initial focus.
 - All interactive tables support arrow key navigation and focusable row actions.
+
+---
+
+## 6. VibeUI Pattern Adaptation
+
+VibeUI is used as a layout reference, not as a runtime dependency. Treasury Atom adopts its
+strongest dashboard patterns while preserving finance-specific clarity and governance.
+
+| VibeUI pattern | Treasury Atom application | Control rationale |
+|---|---|---|
+| Sidebar and main content | Light navigation rail with grouped treasury modules | Maintains module orientation without reducing table width |
+| Three-pane dashboard | Workflow rail, statement batch table and source-evidence pane | Keeps the record and its evidence visible during review |
+| Metric cards | Imported batches, statement lines, review queue and reconciled count | Surfaces operational state without decorative analytics |
+| Checklist onboarding | Upload, validate, reconcile and checker sign-off workflow | Makes the controlled sequence explicit |
+| Empty state | Contextual import action with no fabricated financial data | Prevents illustrative balances from appearing as production facts |
+
+### Surface Rules
+
+- Use solid white surfaces for transaction tables, approvals and audit records.
+- Use translucent treatment only for navigation and non-financial context surfaces.
+- Use mint for verified or reconciled states, amber for pending review and coral for blocked actions.
+- Never rely on color alone. Every status requires a readable label.
+- Agent content must be separated into verified facts, deterministic rule results, interpretation and proposed action.
+
+### Framework Decision
+
+The production client remains React 19 with Vite. The existing Express security boundary,
+authenticated server-sent events and modular API make a Next.js migration unnecessary. React,
+TanStack Query and Framer Motion cover the required interaction model without duplicating the
+server runtime. Tailwind and shadcn/ui may be introduced incrementally only when components are
+moved into the separate design-system package. They are not required for the current workspace
+to remain accessible or visually consistent.
