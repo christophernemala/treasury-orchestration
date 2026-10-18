@@ -10,5 +10,5 @@
     "start": "npm run start -w server",
     "check": "npm run build && npm run test"
   },
-  "devDependencies": { "concurrently": "^9.2.1" }
+  "devDependencies": { "concurrently": "^9.2.5" }
 }
