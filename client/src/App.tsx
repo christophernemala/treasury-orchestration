@@ -1,4 +1,4 @@
-import React, { FormEvent, useState, useMemo } from "react";
+import React, { FormEvent, Suspense, lazy, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -35,7 +35,8 @@ import { useLiveTreasury } from "./hooks/useLiveTreasury";
 import { ObsidianDashboard } from "./components/ObsidianDashboard";
 import type { PageName } from "./components/ObsidianDashboard";
 import { TreasuryAtomLogo } from "./components/TreasuryAtomLogo";
-import { AtomIllustration } from "./components/AtomIllustration";
+import { ReconciliationWorkspace } from "./components/ReconciliationWorkspace";
+import { formatMoney, sumMoney } from "./utils/money";
 import type {
   CashPosition,
   Statement,
@@ -49,19 +50,16 @@ import type {
   AgentRun,
 } from "./types";
 
-// Exact currency formatting
-function formatMoney(amountStr: string | number, currency = "AED"): string {
-  const num = typeof amountStr === "string" ? parseFloat(amountStr) : amountStr;
-  if (isNaN(num)) return `${currency} 0.00`;
-  return `${currency} ${num.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
+const AtomIllustration = lazy(() =>
+  import("./components/AtomIllustration").then(({ AtomIllustration }) => ({
+    default: AtomIllustration,
+  })),
+);
 
 // --------------------------------------------------------------------------
 // LOGIN COMPONENT
 // --------------------------------------------------------------------------
+/** Render password and OTP sign-in, calling onDone after storing the verified token. */
 function Login({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState<"login" | "otp">("login");
   const [email, setEmail] = useState(import.meta.env.DEV ? "admin@treasury.local" : "");
@@ -105,7 +103,16 @@ function Login({ onDone }: { onDone: () => void }) {
     <div className="login-viewport">
       {/* 3D Glowing Atom Stage on Left */}
       <div className="login-stage">
-        <AtomIllustration />
+        <Suspense
+          fallback={
+            <div className="atom-illustration-fallback" role="status" aria-live="polite">
+              <TreasuryAtomLogo size={44} showText={false} />
+              <span>Loading secure workspace…</span>
+            </div>
+          }
+        >
+          <AtomIllustration />
+        </Suspense>
       </div>
 
       {/* Login Form Panel on Right */}
@@ -231,6 +238,7 @@ function Login({ onDone }: { onDone: () => void }) {
 // --------------------------------------------------------------------------
 // MAIN APPLICATION
 // --------------------------------------------------------------------------
+/** Render sign-in or the treasury workspace, coordinating API data, live updates and actions. */
 export function App() {
   const [token, setTokenState] = useState<string | null>(() => getToken());
   const [page, setPage] = useState<PageName>("Overview");
@@ -443,10 +451,11 @@ export function App() {
               </div>
               <div className="kpi-value">
                 {formatMoney(
-                  statementsQuery.data?.reduce(
-                    (acc, s) => acc + (s.status === "unreconciled" ? parseFloat(s.closingBalance) : 0),
-                    0
-                  ) ?? 0,
+                  sumMoney(
+                    statementsQuery.data
+                      ?.filter((statement) => statement.status === "unreconciled")
+                      .map((statement) => statement.closingBalance) ?? [],
+                  ),
                   selectedCurrency
                 )}
               </div>
@@ -777,76 +786,11 @@ export function App() {
           RECONCILIATION SCREEN
           -------------------------------------------------------------------- */}
       {page === "Reconciliation" && (
-        <div className="overview-left">
-          <div className="overview-card">
-            <div className="overview-card-header">
-              <div>
-                <h2>Statement reconciliation workspace</h2>
-                <span className="header-context">
-                  CAMT.053 / MT940 statement match proposals and exceptions review.
-                </span>
-              </div>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => setShowImportModal(true)}
-              >
-                <Upload size={15} />
-                <span>Import statement</span>
-              </button>
-            </div>
-
-            <div className="treasury-table-wrapper">
-              <table className="treasury-table">
-                <thead>
-                  <tr>
-                    <th>Statement ID</th>
-                    <th>Account</th>
-                    <th>Date</th>
-                    <th>Opening</th>
-                    <th>Closing</th>
-                    <th>Lines</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {statementsQuery.data?.map((stmt) => (
-                    <tr key={stmt.id}>
-                      <td style={{ fontFamily: "var(--font-mono)" }}>{stmt.id}</td>
-                      <td style={{ fontFamily: "var(--font-mono)", fontWeight: 600 }}>
-                        {stmt.accountId}
-                      </td>
-                      <td>{stmt.statementDate}</td>
-                      <td className="num-cell">{formatMoney(stmt.openingBalance, stmt.currency)}</td>
-                      <td className="num-cell">{formatMoney(stmt.closingBalance, stmt.currency)}</td>
-                      <td>{stmt.lineCount}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            stmt.status === "reconciled" ? "badge-mint" : "badge-amber"
-                          }`}
-                        >
-                          {stmt.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          style={{ padding: "4px 10px", fontSize: "11px" }}
-                          onClick={() => alert(`Reviewing statement ${stmt.id} matching lines.`)}
-                        >
-                          Review lines
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        <ReconciliationWorkspace
+          statements={statementsQuery.data ?? []}
+          loading={statementsQuery.isLoading}
+          onImport={() => setShowImportModal(true)}
+        />
       )}
 
       {/* --------------------------------------------------------------------
